@@ -41,7 +41,7 @@ reviewing-code-modularity-skill/
 Install with the [skills.sh](https://skills.sh) CLI:
 
 ```sh
-npx skills install tyshkovskii/reviewing-code-modularity-skill
+npx skills add tyshkovskii/reviewing-code-modularity-skill
 ```
 
 This downloads the runtime payload and records it in `skills-lock.json`.
