@@ -1,4 +1,6 @@
-# reviewing-code-modularity
+[![skills.sh](https://skills.sh/b/tyshkovskii/reviewing-code-modularity-skill)](https://skills.sh/tyshkovskii/reviewing-code-modularity-skill)
+
+# reviewing-code-modularity-skill
 
 A coding-agent skill for reviewing code structure without turning small projects into enterprise architecture.
 
@@ -24,7 +26,7 @@ It is intentionally not a Clean Architecture, DDD, SOLID, or dependency-injectio
 ## Project Layout
 
 ```txt
-reviewing-code-modularity/
+reviewing-code-modularity-skill/
   SKILL.md
   references/
     principles.md
@@ -34,32 +36,40 @@ reviewing-code-modularity/
 
 `SKILL.md` contains the runtime instructions and trigger description. `references/` contains detailed material the agent should load only when needed.
 
-## Install for Local Use
+## Install
 
-Copy the runtime skill files into your skills directory:
+Install with the [skills.sh](https://skills.sh) CLI:
+
+```sh
+npx skills install tyshkovskii/reviewing-code-modularity-skill
+```
+
+This downloads the runtime payload and records it in `skills-lock.json`.
+
+### Install Manually
+
+Alternatively, copy the runtime skill files into your skills directory:
 
 ```txt
-~/.agents/skills/reviewing-code-modularity/
+~/.agents/skills/reviewing-code-modularity-skill/
 ```
 
 or inside a repository:
 
 ```txt
-.agents/skills/reviewing-code-modularity/
+.agents/skills/reviewing-code-modularity-skill/
 ```
 
 The installed skill should include only the runtime payload:
 
 ```txt
-reviewing-code-modularity/
+reviewing-code-modularity-skill/
   SKILL.md
   references/
     principles.md
     red-flags.md
     examples.md
 ```
-
-Do not package this `README.md` into the runtime skill unless you are intentionally installing a development copy.
 
 ## Development Checks
 
