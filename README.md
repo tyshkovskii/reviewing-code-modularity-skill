@@ -8,6 +8,32 @@ It helps an agent reason about module boundaries, coupling, cohesion, public API
 
 The design stance is pragmatic: reduce complexity, preserve local conventions, and add structure only when it solves a present problem.
 
+## What it produces
+
+Depending on the task, the skill can produce:
+
+- focused modularity findings for a file, diff, or module
+- a candidate-based architecture review with a single top recommendation
+- before/after structure sketches
+- interface alternatives for a selected restructuring
+- behavior-preserving implementation guidance
+- validation steps after refactoring
+
+It works in four modes — fast review, architecture friction scan, candidate deepening design, and behavior-preserving implementation — and chains them (scan → choose a candidate → design → implement) when the task calls for it.
+
+## Not for
+
+This is not a Clean Architecture generator, DDD generator, SOLID checklist, or dependency-injection template. It should not make small projects look enterprise. It should reduce real complexity.
+
+## Example prompts
+
+- "Review this PR for modularity problems."
+- "This route does too much. Help me split it without overengineering."
+- "Find shallow layers in this backend."
+- "This React component is hard to test. What structure would improve it?"
+- "Scan this codebase for refactoring candidates and give me a top recommendation."
+- "Explore candidate 2 and design the public API."
+
 ## Use Cases
 
 Use this skill when asking an agent to:
@@ -32,9 +58,16 @@ reviewing-code-modularity-skill/
     principles.md
     red-flags.md
     examples.md
+    language.md
+    review-report.md
+    interface-design.md
+    decision-records.md
+  evals/
+    trigger-queries.json
+    evals.json
 ```
 
-`SKILL.md` contains the runtime instructions and trigger description. `references/` contains detailed material the agent should load only when needed.
+`SKILL.md` contains the runtime instructions and trigger description. `references/` contains detailed material the agent should load only when needed. `evals/` holds trigger and output-quality evals used during development; it is not part of the installed runtime payload.
 
 ## Install
 
@@ -60,7 +93,7 @@ or inside a repository:
 .agents/skills/reviewing-code-modularity-skill/
 ```
 
-The installed skill should include only the runtime payload:
+The installed skill should include only the runtime payload (`SKILL.md` and `references/`, not `evals/`):
 
 ```txt
 reviewing-code-modularity-skill/
@@ -69,6 +102,10 @@ reviewing-code-modularity-skill/
     principles.md
     red-flags.md
     examples.md
+    language.md
+    review-report.md
+    interface-design.md
+    decision-records.md
 ```
 
 ## Development Checks
