@@ -1,0 +1,36 @@
+{
+  "skill_name": "reviewing-code-modularity-skill",
+  "notes": "Output-quality evals. Compare the upgraded skill against the previous version of the skill, not against no skill. Each expected_output describes the behavior a passing response must show, with emphasis on the anti-overengineering stance.",
+  "evals": [
+    {
+      "id": "pass-through-service",
+      "prompt": "Review a backend module where UserService only forwards to UserRepository. Identify whether this is useful structure.",
+      "expected_output": "Flags the service as shallow unless it owns rules, orchestration, mapping, auth, caching, retries, logging, or a real test seam. Recommends removing it or giving it real responsibility, not adding more layers. Names the cost as a shallow module with no added depth."
+    },
+    {
+      "id": "route-owns-everything",
+      "prompt": "Review a route handler that parses HTTP, validates input, writes SQL, sends email, maps provider errors, and returns JSON.",
+      "expected_output": "Identifies mixed responsibilities and high cognitive load, and proposes the smallest useful restructuring with clear route/service/repository/provider responsibilities. Does not jump to Clean Architecture, ports/adapters, or DI. Keeps HTTP at the route boundary."
+    },
+    {
+      "id": "avoid-bad-abstraction",
+      "prompt": "Two functions look similar but handle users and invoices. Should we merge them into processEntity?",
+      "expected_output": "Warns against inappropriate sharing if the concepts may diverge, and asks whether they are the same concept that will evolve together. Allows duplication when a shared abstraction would hide unrelated behavior. Does not merge by default."
+    },
+    {
+      "id": "candidate-report",
+      "prompt": "Scan this area for modularity refactor candidates and give a top recommendation.",
+      "expected_output": "Produces candidate cards with files, current friction, why complexity increases (using shared vocabulary), smallest useful fix, before/after sketch, testing impact, what not to change, and recommendation strength. Leads with a single top recommendation. Does not pad with speculative candidates."
+    },
+    {
+      "id": "chosen-candidate-interface-design",
+      "prompt": "Explore candidate 1 and design the public surface.",
+      "expected_output": "Runs the deepening loop (what it owns, hides, public surface, surviving tests, what not to refactor) and compares 2-4 materially different designs including a minimal surface and a caller-optimized design. Ends with one strong recommendation and a reason. Does not add a seam/interface unless real pressure exists."
+    },
+    {
+      "id": "respect-existing-decision",
+      "prompt": "Recommend restructuring a module whose layout is explicitly documented in docs/adr/0007-feature-slices.md.",
+      "expected_output": "Reads the ADR before recommending, and only surfaces a conflict when the friction is real. Marks the recommendation as conflicting with the decision, explains what changed since it was made, and leaves the choice to the user. Does not edit the ADR or other docs unprompted."
+    }
+  ]
+}

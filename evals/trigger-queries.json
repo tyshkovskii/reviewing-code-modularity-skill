@@ -1,0 +1,82 @@
+[
+  {
+    "query": "this route handler is a mess, it validates, queries db, sends emails, maps errors. help me clean it up",
+    "should_trigger": true
+  },
+  {
+    "query": "review this PR for module boundaries and coupling",
+    "should_trigger": true
+  },
+  {
+    "query": "find places where our service layer is just pass-through wrappers",
+    "should_trigger": true
+  },
+  {
+    "query": "split this 900 line file",
+    "should_trigger": true
+  },
+  {
+    "query": "make this React component easier to test without creating fake architecture",
+    "should_trigger": true
+  },
+  {
+    "query": "I keep editing the same date-formatting logic in five different files, what should I do",
+    "should_trigger": true
+  },
+  {
+    "query": "scan this backend for refactoring candidates and give me a top recommendation",
+    "should_trigger": true
+  },
+  {
+    "query": "should this be one module or three? the boundaries feel wrong",
+    "should_trigger": true
+  },
+  {
+    "query": "explore candidate 2 and design the public API for it",
+    "should_trigger": true
+  },
+  {
+    "query": "this util file has become a junk drawer, where should these functions live",
+    "should_trigger": true
+  },
+  {
+    "query": "format this file with prettier",
+    "should_trigger": false
+  },
+  {
+    "query": "fix this null pointer bug",
+    "should_trigger": false
+  },
+  {
+    "query": "rename getUsr to getUser",
+    "should_trigger": false
+  },
+  {
+    "query": "add a loading spinner to this button",
+    "should_trigger": false
+  },
+  {
+    "query": "write unit tests for this pure function",
+    "should_trigger": false
+  },
+  {
+    "query": "why is this regex not matching trailing whitespace",
+    "should_trigger": false
+  },
+  {
+    "query": "bump the express dependency to the latest version",
+    "should_trigger": false
+  },
+  {
+    "query": "add a new column to the users table and a migration",
+    "should_trigger": false
+  },
+  {
+    "query": "translate these UI strings into French",
+    "should_trigger": false
+  },
+  {
+    "query": "the API returns 500 on empty body, what's the cause",
+    "should_trigger": false
+  }
+]
