@@ -1,8 +1,8 @@
 # Interface Design
 
-Use only after a modularity candidate is selected and the design is nontrivial — a new public surface, a moved boundary, or a genuine choice between shapes. Do not use this to justify creating interfaces. Most candidates need one obvious design, not a design exploration.
+Use only after a modularity candidate is selected, or when the user explicitly asks for public API / interface design. Use it only when the decision is nontrivial — a new public surface, a moved boundary, or a genuine choice between shapes. Do not use this to justify creating interfaces. Most candidates need one obvious design, not a design exploration.
 
-The goal is to compare *materially different* shapes and recommend one. If the alternatives differ only cosmetically, you do not need this file — propose the one shape and move on.
+The goal is to compare *materially different* shapes and recommend one. If the alternatives differ only cosmetically, you do not need this file — propose the one shape and move on. Never invent an artificial interface to fill out the comparison.
 
 ## Process
 
@@ -22,8 +22,13 @@ Generate 2 to 4 designs that differ in what the public surface is and what it hi
 - Avoid speculative extension points. One variation is not a reason.
 
 ### Design D: Seam / adapters
-- Only when there are two or more real implementations, or a test seam is justified by real coupling pressure you can point to.
-- A single implementation with no testing pain does not justify this design.
+Allowed only with real, present pressure you can point to — at least one of:
+- Multiple implementations already exist.
+- Tests are genuinely impossible (not just inconvenient) without a seam.
+- An external dependency's coupling is actively hurting the code.
+- The public API is leaking implementation details that a seam would contain.
+
+A single implementation with no testing pain does not justify this design.
 
 ## Output
 

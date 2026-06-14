@@ -1,12 +1,20 @@
 # Review Report
 
-Two output levels for a modularity review. Markdown is the default. HTML is opt-in for broad architecture scans. Use the vocabulary in `language.md` (public surface, leakage, shallow module, locality, change amplification, recommendation strength).
+The candidate report format for **Mode B** architecture friction scans. Markdown is the default. HTML is opt-in for broad scans only. Use the vocabulary in `language.md` (public surface, leakage, shallow module, locality, change amplification, recommendation strength).
 
-A report is only as good as its restraint. A "Top recommendation" plus one or two strong candidates beats a long list of speculative ones. Do not pad the report to look thorough.
+**When to use candidate cards:**
+
+- Mode B architecture friction scans.
+- Broad structure-advice requests.
+- When the user explicitly asks for candidates or a top recommendation.
+
+**Do not use candidate cards for ordinary Mode A fast reviews unless the user asks.** A fast review of a file, diff, PR, or small area returns concise findings ordered by risk — not cards.
+
+A report is only as good as its restraint. A "Top recommendation" plus one or two strong candidates beats a long list of speculative ones. Do not pad the report to look thorough, and ground every candidate in the actual code — no generic architecture advice.
 
 ## Default: Markdown candidate report
 
-Use this for any review, structure-advice, or friction-scan response. Present candidates ordered by strength, with the single most important action surfaced first.
+Present candidates ordered by strength, with the single most important action surfaced first.
 
 ````md
 # Modularity Review
