@@ -3,70 +3,74 @@ name: reviewing-code-modularity-skill
 description: Use when reviewing or changing code structure so a codebase is easier to understand, change, test, or delete — including when the user uses no structural vocabulary, e.g. "this file does too much", "this is hard to test", "I keep editing the same thing in many places", or "this is a mess". Covers module boundaries, file splits, public APIs/exports, dependency direction, coupling/cohesion, shallow layers, over-abstraction, duplicated structural decisions, hard-to-test handlers/components, scattered error mapping, and refactors that move code across modules. Do not use for ordinary bug fixes, formatting, naming-only cleanup, or local edits that do not affect structure.
 ---
 
-# Reviewing Code Modularity Skill
+# Reviewing Code Modularity
 
 ## Goal
 
-Improve code structure by reducing complexity.
+Reduce complexity by improving module ownership, public surfaces, information hiding, dependency direction, and testable seams — without adding architecture cosplay.
 
-Prefer deep modules with small, stable public APIs that hide implementation details, point dependencies in a clear direction, and stay testable at their boundaries.
+Prefer deep modules with small, stable public surfaces that hide implementation details, point dependencies in a clear direction, and stay testable at their boundaries. Use the smallest restructuring that makes code easier to understand, change, and test.
 
-Avoid architecture cosplay. Do not add layers, interfaces, factories, dependency injection, repositories, adapters, or design patterns unless they reduce real complexity in the current codebase.
+## Non-negotiables
 
-## Core rule
+These hold in every mode. They are the point of this skill — do not dilute them.
 
-Before changing structure, inspect the existing code.
-
-Preserve local conventions unless they are clearly causing complexity. Use the smallest restructuring that makes the code easier to understand, change, and test.
-
-Do not force every project into Clean Architecture, hexagonal architecture, DDD, SOLID-heavy structure, or enterprise layering.
-
-## Gotchas
-
-Concrete corrections to mistakes that are easy to make here:
-
-- Do not propose a restructuring before reading the actual code and nearby patterns. Generic layer advice given sight-unseen is usually wrong.
-- Do not treat file length as a reason to split. Split by responsibility, not line count.
-- Do not add service/repository/use-case layers just to match the example dependency directions below. Map those directions to the project's existing vocabulary.
+- Do not recommend Clean Architecture, DDD, hexagonal architecture, SOLID-heavy layering, repositories, factories, adapters, dependency injection, ports, or interfaces unless they solve present complexity in this codebase.
+- Do not split files by line count. Split by responsibility.
+- Do not add layers just because the current structure looks informal.
 - Do not merge duplicated-looking code when the concepts may diverge. Duplication often beats a wrong abstraction.
-- Do not introduce interfaces, factories, or dependency injection for a single implementation with no test-seam or coupling pressure.
-- When unsure whether a structure is actually a problem, search `references/red-flags.md` before flagging it.
-- Do not bundle an unrelated refactor into the change, and preserve behavior unless a change is requested.
+- Do not introduce a seam for one implementation unless test pressure or coupling pressure is real.
+- Do not propose a broad rewrite when a local restructuring solves the problem.
+- Do not propose structure before reading the actual code and nearby patterns. Advice given sight-unseen is usually wrong.
 
-## Workflow
+## Core vocabulary
 
-1. Understand the requested behavior or problem.
-2. Inspect the current project structure and nearby code.
-3. Identify the modules touched by the change.
-4. For each touched module, determine:
-   - What responsibility does it own?
-   - What should it hide?
-   - What is its public API?
-   - Who imports it?
-   - What does it import?
-   - Can it be tested without booting the whole application?
-5. Look for complexity red flags.
-6. Propose the smallest useful restructuring.
-7. Avoid speculative abstractions.
-8. Match the action to the task type: for review/design tasks, report recommendations only; for implementation tasks, make the smallest behavior-preserving change.
-9. If edits were made, validate the change (see Validation below).
-10. Summarize tradeoffs and remaining risks.
+Use a consistent lens when terminology matters or when producing a report: module, public surface, implementation, responsibility, depth, shallow module, seam, leakage, locality, change amplification, architecture cosplay, recommendation strength. Load `references/language.md` for precise definitions. Prefer the repo's own word for a concept when it has one.
 
-## First inspection checklist
+## Modes
 
-Before proposing structure changes, inspect:
+Pick the mode that matches the task. Modes can chain: B → C → D is the full arc.
 
-- Existing folder layout
-- Existing naming conventions
-- Existing import direction
+### Mode A: Fast modularity review
+Use when reviewing a diff, file, or module and returning findings. Inspect the code, identify the structural problems that matter, report them ordered by risk with a minimal fix each. No candidate cards needed unless asked. This is the common case.
+
+### Mode B: Architecture friction scan
+Use when the user asks to improve structure, find refactoring opportunities, or review a messy area. Explore the area for friction, then produce candidate cards and a top recommendation using `references/review-report.md`. Check project context first via `references/decision-records.md`. After presenting candidates, ask which one to explore — unless the user already asked for implementation.
+
+### Mode C: Candidate deepening design
+Use after the user chooses one candidate. Run the deepening loop below. If the design is nontrivial, compare interface designs using `references/interface-design.md`. End with one strong recommendation.
+
+### Mode D: Behavior-preserving implementation
+Use when the user asks the agent to actually refactor. Make the smallest behavior-preserving change that realizes the chosen design. Preserve the candidate's "what not to change" guardrail. Then validate (see Validation).
+
+## Candidate deepening loop
+
+After Mode B presents candidates, ask which candidate the user wants to explore — unless the user already requested implementation.
+
+When a candidate is selected:
+
+1. Restate the candidate in one or two sentences.
+2. Identify the constraints (existing conventions, public API stability, project context).
+3. Identify what the new/changed module should **own**.
+4. Identify what it should **hide**.
+5. Identify the **public surface**.
+6. Identify the tests that should survive unchanged (behavior contract).
+7. Identify what **not** to refactor.
+8. Recommend one design. If it is nontrivial, first compare designs via `references/interface-design.md`.
+
+This turns the review from "here are findings" into a design conversation, without committing to a rewrite.
+
+## Exploration checklist
+
+Before proposing structure changes, inspect the current design — do not invent a new architecture until you understand the existing one:
+
+- Folder layout, naming conventions, and import direction
 - Nearby examples of similar features
-- Existing test style
-- Existing public exports
+- Existing test style and existing public exports
 - Existing route/component/service boundaries
-- Existing error-handling conventions
-- Existing validation and schema conventions
+- Existing error-handling, validation, and schema conventions
 
-Do not invent a new architecture until you understand the current one.
+For each module touched by the change, determine: What responsibility does it own? What should it hide? What is its public surface? Who imports it? What does it import? Can it be tested without booting the whole application?
 
 ## Complexity model
 
@@ -79,104 +83,52 @@ Treat complexity as anything that makes future changes harder. Watch for four fo
 
 See `references/red-flags.md` and `references/principles.md` for the full catalog.
 
-## Module depth
+## Design guidance
 
-Prefer deep modules: a simple interface over useful behavior with internals hidden, so callers carry little burden.
+The reasoning behind recommendations. Apply pragmatically; load the linked references only when a specific call needs the detail.
 
-Distrust shallow modules: an interface almost as complicated as the implementation, pass-through methods, or layers that exist only because "there should be a layer." A service that only forwards to a repository adds nothing unless it owns rules, orchestration, mapping, authorization, caching, retries, logging, or a test seam.
+- **Module depth.** Prefer deep modules: a simple surface over useful behavior with internals hidden. Distrust shallow modules — pass-through methods, or a layer that exists only because "there should be a layer." A service that only forwards to a repository adds nothing unless it owns rules, orchestration, mapping, authorization, caching, retries, logging, or a test seam. See `references/principles.md` (Deep modules), `references/red-flags.md` (#1, #2).
+- **Information hiding.** A design decision should usually live in one place. Hide details likely to change: storage format, external API shape, validation rules, defaults, error mapping, cache/retry behavior, framework request/response objects, query structure, date formatting, permission checks, env config. Red flag: the same constant, format, or transformation repeated across modules. See `references/principles.md` (Information hiding), `references/red-flags.md` (#3, #9).
+- **Dependency direction.** Keep important policy depending on details as little as possible. Defaults: `routes -> services -> repositories` (backend), `pages -> feature components -> shared UI` (frontend), `public API -> internal -> low-level helpers` (library). Map these to the project's vocabulary; do not introduce layers just to match them. Watch for reversed direction. See `references/principles.md` (Dependencies).
+- **Abstraction discipline.** Create an abstraction only under present pressure: multiple callers need the concept, a leaking detail must be hidden, tests need a seam, a change spreads across unrelated files, or a public surface needs simplifying. Not for "Clean Architecture says so," "SOLID needs an interface," "maybe later," or "the file is long." See `references/principles.md` (Abstractions).
+- **File splitting.** Split by responsibility, not length. Good reasons: parts change for different reasons, one part is independently testable, the split hides a decision or shrinks the public surface, or it separates framework code from business logic. See `references/principles.md` (File splitting).
+- **Naming and consistency.** Prefer names that reveal the concept. Distrust vague names (`manager`, `helper`, `utils`, `processor`, `handler`, `common`, `data`) unless a module scopes them. Keep operation names consistent and paired (`create/delete`, `add/remove`). See `references/red-flags.md` (#10, #11).
+- **Error-handling structure.** Centralize error translation near the boundary; let services throw meaningful domain/application errors. Distinguish validation, not-found, conflict, auth, and unexpected errors; keep one consistent API error shape. Red flag: repeated try/catch and status mapping across routes. See `references/red-flags.md` (#26), `references/examples.md` (Example 10).
 
-See `references/principles.md` (Deep modules) and `references/red-flags.md` (#1, #2).
+## Candidate report
 
-## Information hiding
+When producing multiple candidates or a visual report (Mode B), use `references/review-report.md`. Markdown candidate cards are the default; an HTML report is opt-in for broad scans. Every candidate names a smallest useful fix, a before/after sketch, recommendation strength, and what not to change — and the report leads with a single top recommendation.
 
-A design decision should usually live in one place. Hide details likely to change: storage format, external API shape, validation rules, defaults, error mapping, cache/retry behavior, framework request/response objects, query structure, date formatting, permission checks, and environment config.
+## Interface design
 
-Red flag: the same constant, format, default, validation, or transformation repeated across modules, or callers that know storage or internal-sequencing details.
+Use `references/interface-design.md` only after a candidate is selected (Mode C) and the design is nontrivial. Compare 2-4 materially different designs and end with one strong recommendation. This is not a license to add interfaces — the minimal surface often wins.
 
-See `references/principles.md` (Information hiding) and `references/red-flags.md` (#3, #9).
+## Project context and ADRs
 
-## Dependency direction
-
-Keep dependencies pointing so that important policy depends on details as little as possible. Defaults: `routes -> services -> repositories` (backend), `pages -> feature components -> shared UI` (frontend), `public API -> internal -> low-level helpers` (library). Map these directions to the project's existing vocabulary; do not introduce service/repository layers just to match these examples.
-
-Watch for reversed direction: db importing services, business logic importing the route framework, shared utilities importing feature code, low-level helpers importing app config.
-
-See `references/principles.md` (Dependencies) for the direction diagrams.
-
-## Abstraction discipline
-
-Create an abstraction only when it solves present pressure: multiple callers need the concept, a leaking detail must be hidden, tests need a seam, a change spreads across unrelated files, or a public API needs simplifying. Do not abstract for "Clean Architecture says so," "SOLID needs an interface," "maybe later," or "the file is long."
-
-See `references/principles.md` (Abstractions) for the good/bad reasons lists.
-
-## File splitting
-
-Split by responsibility, not by length. Good reasons: parts change for different reasons, one part is independently testable, the split hides a design decision or shrinks the public API, or the file mixes framework code with business logic. Bad reasons: an arbitrary line count, one-function-per-file, or making the diff look architectural.
-
-See `references/principles.md` (File splitting).
-
-## Naming and consistency
-
-Prefer names that reveal the concept, not implementation mechanics. Distrust vague names (`manager`, `helper`, `utils`, `processor`, `handler`, `common`, `data`) unless a module scopes them precisely. Keep operation names consistent and pair them deliberately (`create/delete`, `add/remove`, `start/stop`); do not mix domain naming with database naming in public APIs.
-
-See `references/red-flags.md` (#10, #11).
-
-## Error-handling structure
-
-Prefer simple, consistent error semantics. Centralize error translation near the boundary; let services throw meaningful domain/application errors and let lower layers hide recoverable details. Distinguish validation, not-found, conflict, auth, and unexpected errors, and keep one consistent API error shape.
-
-Red flag: repeated try/catch and status mapping scattered across routes.
-
-See `references/red-flags.md` (#26) and `references/examples.md` (Example 10).
+Before broad architecture recommendations, use `references/decision-records.md` to read existing context (`AGENTS.md`, `CLAUDE.md`, `CONTEXT.md`, `CONTRIBUTING.md`, `docs/adr/`, …) when present. Do not mutate these docs by default. Surface a conflict only when the friction is real, mark it as conflicting, and leave the choice to the user. Offer an ADR only for decisions that are hard to reverse, surprising without context, and based on a real trade-off.
 
 ## Review output format
 
-When reviewing code structure, lead with findings ordered by risk. For each finding, include:
-
-```txt
-- Severity and file/line reference
-- Why it increases complexity
-- Minimal fix
-```
-
-Use this severity scale:
+For Mode A reviews, lead with findings ordered by risk. For each: severity and file/line reference, why it increases complexity, minimal fix.
 
 - **high** — causes change amplification or hidden bugs now (leaked decisions, reversed dependencies, side-effectful imports).
 - **medium** — structure that will bite as the feature grows (shallow layers, mixed responsibilities, weak boundaries).
-- **low** — cleanup that is safe to defer (naming, small duplication, cosmetic splits).
+- **low** — cleanup safe to defer (naming, small duplication, cosmetic splits).
 
-Add better long-term structure, what not to change, and validation steps only when useful.
+For implementation tasks (Mode D), close with: what changed, why this structure is better, what checks were run, remaining risks. For tiny changes, collapse into a short paragraph with checks.
 
-For implementation tasks, usually use this final-response format. For tiny changes, collapse it into a short paragraph with checks.
-
-```txt
-1. What changed
-2. Why this structure is better
-3. What checks were run
-4. Remaining risks or tradeoffs
-```
-
-For design-only tasks, use this format:
-
-```txt
-Recommended structure
-Why this structure works
-Where each responsibility lives
-What to avoid
-When to introduce more structure later
-```
+For Mode B, use the candidate report format from `references/review-report.md`.
 
 ## Refactoring rules
 
-Quick-reference checklist for when you are making changes (the sections above give the reasoning; the anti-enterprise and anti-premature-abstraction rules live in Goal, Core rule, and Abstraction discipline):
+When making changes:
 
 - Prefer small structural improvements during feature work.
 - Preserve behavior unless the user asks for a behavior change.
 - Do not silently change public APIs.
 - Do not move code without checking imports.
 - Do not introduce new dependencies unless explicitly justified.
-- Do not merge duplicated-looking code if the concepts may evolve separately.
-- Do not split by technical category if feature ownership is clearer, nor by feature if it duplicates shared policy or invariants.
+- Do not bundle an unrelated refactor into the change.
 
 ## Validation
 
@@ -186,17 +138,17 @@ After edits:
 2. Run typecheck if available.
 3. Run lint if available.
 4. Run import or dependency-boundary checks if available.
-5. Inspect the final diff.
-6. Confirm no unrelated refactor was introduced.
-7. If validation cannot run, state that clearly.
+5. Inspect the final diff; confirm no unrelated refactor was introduced.
+6. If validation cannot run, state that clearly.
 
-## Use references when needed
+## Reference loading
 
-Use the files in `references/` only when they are needed (use `rg`, or `grep`/the Grep tool if `rg` is unavailable). If the relevant section is not obvious, list headings first with `rg '^## ' references/*.md`, then read only the matching section ranges.
+Use progressive disclosure. Use `rg` (or the Grep tool / `grep` if `rg` is unavailable); if the relevant section is not obvious, list headings first with `rg '^## ' references/*.md`, then read only the matching ranges. Do not recite references — apply them to the code at hand.
 
-- Search `references/red-flags.md` for focused review concerns; read only the relevant numbered red flags.
-- Search `references/examples.md` when proposing a restructuring and no nearby project pattern is enough; read only the relevant example.
-- Search `references/principles.md` for design-only discussions, dependency-direction and file-splitting detail, or non-obvious tradeoffs; read only the relevant principle sections.
-- Read a full reference file only as a last resort after inspecting the code and confirming the whole catalog is needed.
-
-Do not recite the references unless useful. Apply them to the code at hand.
+- `references/red-flags.md` — suspected problems; read only the relevant numbered red flags.
+- `references/principles.md` — tradeoffs, dependency-direction and file-splitting detail; read only the relevant sections.
+- `references/examples.md` — concrete restructuring examples when no nearby project pattern is enough.
+- `references/language.md` — shared vocabulary when terminology matters or when producing a report.
+- `references/review-report.md` — candidate report output (Mode B).
+- `references/interface-design.md` — design exploration for a chosen candidate (Mode C).
+- `references/decision-records.md` — project-context and ADR handling before broad recommendations.
