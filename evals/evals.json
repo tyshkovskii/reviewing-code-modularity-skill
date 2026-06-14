@@ -31,6 +31,31 @@
       "id": "respect-existing-decision",
       "prompt": "Recommend restructuring a module whose layout is explicitly documented in docs/adr/0007-feature-slices.md.",
       "expected_output": "Reads the ADR before recommending, and only surfaces a conflict when the friction is real. Marks the recommendation as conflicting with the decision, explains what changed since it was made, and leaves the choice to the user. Does not edit the ADR or other docs unprompted."
+    },
+    {
+      "id": "long-file-not-enough",
+      "prompt": "This file is 1200 lines. Split it.",
+      "expected_output": "Does not split by line count alone. First identifies responsibilities, reasons for change, the public surface, callers, and test boundaries. Splits only along a real responsibility seam, and if none is justified, recommends no structural split and explains why length alone is not a reason."
+    },
+    {
+      "id": "simple-bug-fix-should-not-architecture",
+      "prompt": "Fix this null pointer bug in the route handler.",
+      "expected_output": "Keeps the fix local and does not trigger an architecture review. Only raises structure if the bug clearly exposes structural complexity (e.g. the same missing check is duplicated across many handlers), and even then offers it as a separate optional note rather than blocking the fix."
+    },
+    {
+      "id": "accidental-enterprise-layering",
+      "prompt": "Should I add service/repository/use-case layers to make this cleaner?",
+      "expected_output": "Rejects layering by default and asks what complexity exists today. Only recommends a layer if it would own real responsibility (rules, orchestration, mapping, auth, caching, a test seam). Warns that empty pass-through layers are shallow modules that add surface without depth."
+    },
+    {
+      "id": "wrong-shared-helper",
+      "prompt": "These two blocks look similar; move them into utils?",
+      "expected_output": "Checks whether the two blocks are actually the same concept that will evolve together before merging. Rejects a junk-drawer utils module. Prefers a named module only if it hides a real, shared design decision; otherwise keeps the duplication."
+    },
+    {
+      "id": "html-report-opt-in",
+      "prompt": "Review this PR for modularity issues.",
+      "expected_output": "Returns concise Mode A findings ordered by risk. Does not create an HTML report and does not produce candidate cards. HTML and candidate cards are reserved for broad scans or an explicit visual-report / candidates request."
     }
   ]
 }

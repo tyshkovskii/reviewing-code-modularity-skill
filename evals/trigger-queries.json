@@ -78,5 +78,38 @@
   {
     "query": "the API returns 500 on empty body, what's the cause",
     "should_trigger": false
+  },
+  {
+    "query": "this file is 1200 lines, split it",
+    "should_trigger": true
+  },
+  {
+    "query": "should we add Clean Architecture here?",
+    "should_trigger": true
+  },
+  {
+    "query": "this module imports the db client everywhere",
+    "should_trigger": true
+  },
+  {
+    "query": "create an HTML architecture report for this package",
+    "should_trigger": true
+  },
+  {
+    "query": "fix typo in button label",
+    "should_trigger": false
+  },
+  {
+    "query": "add console logging to debug this request",
+    "should_trigger": false
+  },
+  {
+    "query": "upgrade vite to latest",
+    "should_trigger": false
+  },
+  {
+    "query": "write a SQL migration for user_status",
+    "should_trigger": false,
+    "note": "Not structural by itself; would only trigger if the user also asks about how the change reshapes module boundaries or public types."
   }
 ]
