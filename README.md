@@ -2,11 +2,11 @@
 
 # reviewing-code-modularity-skill
 
-A coding-agent skill for reviewing code structure without turning small projects into enterprise architecture.
+A coding-agent skill for reducing code complexity without architecture cosplay.
 
-It helps an agent reason about module boundaries, coupling, cohesion, public APIs, naming consistency, dependency direction, and when an abstraction is actually worth introducing.
+Use it when a file, module, route, component, or service is hard to change, hard to test, leaking details, growing fake layers, or forcing the same change across too many places.
 
-The design stance is pragmatic: reduce complexity, preserve local conventions, and add structure only when it solves a present problem.
+It helps an agent reason about module boundaries, coupling, cohesion, public surfaces, naming consistency, information hiding, dependency direction, and testable seams — and decide when an abstraction is actually worth introducing. The stance is pragmatic: reduce real complexity, preserve local conventions, and add structure only when it solves a present problem. It will not turn a small project into Clean Architecture, DDD, SOLID, or DI theater.
 
 ## What it produces
 
@@ -34,20 +34,18 @@ This is not a Clean Architecture generator, DDD generator, SOLID checklist, or d
 - "Scan this codebase for refactoring candidates and give me a top recommendation."
 - "Explore candidate 2 and design the public API."
 
-## Use Cases
+## Full workflow example
 
-Use this skill when asking an agent to:
+The skill works in four modes (fast review, architecture friction scan, candidate deepening design, behavior-preserving implementation) and chains them when the task is broad:
 
-- review code organization
-- refactor messy modules
-- split files by responsibility
-- identify coupling and information leakage
-- improve API/service/repository boundaries
-- avoid `utils.ts` junk drawers
-- decide whether an abstraction is useful
-- keep small projects simple
+1. **"Scan this backend for modularity refactor candidates."**
+   → a candidate report: a top recommendation plus 1–4 candidates, each with current friction, why complexity increases, the smallest useful fix, a before/after sketch, testing impact, what not to change, and a recommendation strength.
+2. **"Explore candidate 1."**
+   → what the module owns and hides, its public surface, example caller code, the tests that should survive, what not to refactor, and — if the decision is nontrivial — 2–4 materially different designs ending in one strong recommendation.
+3. **"Implement the smallest safe version."**
+   → a behavior-preserving refactor that keeps the public API stable, plus validation (smallest relevant tests, typecheck, lint, import checks) and a summary of changed files and remaining risk.
 
-It is intentionally not a Clean Architecture, DDD, SOLID, or dependency-injection generator.
+A small, well-scoped request stops at step 1's fast-review equivalent — concise findings, no candidate cards.
 
 ## Project Layout
 
