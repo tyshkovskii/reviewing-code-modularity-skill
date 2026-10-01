@@ -1,0 +1,2 @@
+# Signup
+A private Node service has an HTTP signup handler and a weekly import job. Both need the same email normalization, duplicate handling, account creation, and welcome message behavior. `src/signup-route.mjs` currently implements all of it. The import job is requested for next sprint and has not been implemented; do not build it in this task. The store and mail modules are existing infrastructure owners. Tests reset their in-memory fakes. Run `node --test contract.test.mjs`.

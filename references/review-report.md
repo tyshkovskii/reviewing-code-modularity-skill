@@ -1,99 +1,48 @@
 # Review Report
 
-The candidate report format for **Mode B** architecture friction scans. Markdown is the default. HTML is opt-in for broad scans only. Use the vocabulary in `language.md` (public surface, leakage, shallow module, locality, change amplification, recommendation strength).
+Use this for Mode B architecture friction scans or an explicit candidate request. Mode A uses concise findings, not candidate cards. Return Markdown in the conversation by default; create a report file only when requested.
 
-**When to use candidate cards:**
+Apply the evidence checks in `SKILL.md` before formatting the result. Report **0–4 supported candidates**, not a quota. A no-change recommendation is useful. Do not confuse a limited inspection with proof that the whole codebase is sound.
 
-- Mode B architecture friction scans.
-- Broad structure-advice requests.
-- When the user explicitly asks for candidates or a top recommendation.
+## Scope and top recommendation
 
-**Do not use candidate cards for ordinary Mode A fast reviews unless the user asks.** A fast review of a file, diff, PR, or small area returns concise findings ordered by risk — not cards.
+Start with the single most useful action, which may be to leave the structure alone. State the area or PR comparison inspected and material coverage gaps briefly. For a PR, distinguish introduced/worsened issues from existing debt.
 
-A report is only as good as its restraint. A "Top recommendation" plus one or two strong candidates beats a long list of speculative ones. Do not pad the report to look thorough, and ground every candidate in the actual code — no generic architecture advice.
+If no candidate meets the evidence checks, stop after the no-change recommendation and coverage note. Do not produce empty cards or fill space with speculative ideas. If friction is established but no remedy clearly wins, say what limited design comparison would resolve it.
 
-## Default: Markdown candidate report
+## Candidate contents
 
-Present candidates ordered by strength, with the single most important action surfaced first.
+Use only the detail needed to assess the recommendation; short candidates can be one paragraph. For a substantial candidate, this shape is useful:
 
-````md
-# Modularity Review
+```md
+### [Short title]
 
-## Top recommendation
-[One direct, behavior-preserving action. The single highest-leverage change. If nothing rises to "Strong," say so plainly and explain why the area is fine.]
+**Impact:** high | medium | low — [concrete consequence]
+**Evidence:** Demonstrated | Supported
+**Scope:** Introduced/worsened | Existing [for a PR]
+**Strength:** Strong | Worth exploring
+**Locations:** [inspected files/symbols and relevant callers]
 
-## Candidate 1: [short title]
-**Strength:** Strong | Worth exploring | Speculative
-**Files:** `path/one`, `path/two`
+[Current friction, the affected operation or actual planned change, and the
+dependency or duplicated knowledge causing the cost. Distinguish observation
+from inference and explain why the strongest counter-explanation does not fit.]
 
-**Current friction:**
-[What hurts today, grounded in the actual code. Not a generic concern.]
+**Smallest useful fix:** [Behavior-preserving change and what it costs,
+including migration and added indirection.]
 
-**Why it increases complexity:**
-[Name the mechanism using shared vocabulary: change amplification, leakage, shallow module, low locality, reversed dependency.]
-
-**Smallest useful fix:**
-[The minimal behavior-preserving change that removes the friction. Not a rewrite.]
-
-**Before**
-```txt
-[small dependency / call sketch of the current shape]
+**Testing impact:** [Which behavior checks remain valid or become practical.]
+**What not to change:** [The specific over-refactor risk to avoid.]
 ```
 
-**After**
-```txt
-[small sketch of the proposed shape]
-```
+Add a small before/after call or dependency sketch only when it clarifies the changed boundary. Do not include full diffs or repeat the prose in diagram form. Do not force a field into a report when it is inapplicable; the reasoning matters more than the template.
 
-**Testing impact:**
-[How tests get simpler, more meaningful, or possible at all.]
-
-**What not to change:**
-[Explicit guardrail against over-refactor — the layers/interfaces/abstractions NOT to add.]
-
-## Candidate 2: [short title]
-[...same structure...]
-````
-
-Guidance:
-
-- Cap candidates at what is genuinely worth raising — usually 1 to 4. Quality over count.
-- The before/after sketches are dependency or call-shape sketches, not full diffs. Keep them small enough to read at a glance.
-- Every candidate must name *what not to change*. This is where this skill differs from generic architecture tools.
-- If a candidate's only justification is a hypothetical future, mark it Speculative and keep it short.
+Unresolved leads are not candidates. Mention a missing caller, inaccessible dependency, or unavailable comparison as a limitation only when it materially limits the conclusion. Do not turn a lack of evidence into a confident clean bill of health.
 
 ## Optional: HTML report
 
-Use only when the user asks for a full/visual architecture report, or when the task is a broad architecture scan across many modules and a memorable artifact helps.
+Use HTML only after an explicit HTML or visual-report request. A broad scan, a request for a thorough review, or the availability of a renderer does not authorize an HTML artifact.
 
-Rules:
-
-- Markdown stays the default. HTML is never the default for a normal review.
-- Write a single self-contained `.html` file to a temp directory (e.g. `/tmp` or the OS temp dir), **not** into the repo. Report the path.
-- Reuse the candidate-card structure above: top recommendation, then cards with strength, files, friction, before/after, testing impact, and what-not-to-change.
-- Before/after diagrams can be simple boxes-and-arrows. Do not require Tailwind, Mermaid, or a build step. Inline minimal CSS is enough.
-- Do not let visual polish become the work. The findings are the product; the HTML is a wrapper.
-
-Minimal skeleton:
-
-```html
-<!doctype html>
-<html>
-<head><meta charset="utf-8"><title>Modularity Review</title>
-<style>
-  body{font:16px/1.5 system-ui;margin:2rem auto;max-width:60rem;padding:0 1rem}
-  .card{border:1px solid #ddd;border-radius:8px;padding:1rem 1.25rem;margin:1rem 0}
-  .strong{color:#1a7f37}.exploring{color:#9a6700}.speculative{color:#6e7781}
-  pre{background:#f6f8fa;padding:.75rem;border-radius:6px;overflow:auto}
-</style></head>
-<body>
-  <h1>Modularity Review</h1>
-  <section><h2>Top recommendation</h2><p>...</p></section>
-  <section class="card">
-    <h2>Candidate 1: ...</h2>
-    <p><strong class="strong">Strong</strong> · <code>files</code></p>
-    <!-- friction, why, smallest fix, before/after, testing impact, what not to change -->
-  </section>
-</body>
-</html>
-```
+- Keep the same evidence, impact, scope, and recommendation content; visual polish is secondary.
+- Create a self-contained file at the user-requested destination or the host's designated artifact location. Keep generated reports out of the reviewed repository unless requested there.
+- Use simple inline styling. Do not require a frontend framework or a build step just to show findings.
+- Present the actual artifact location or link supported by the host. Do not create a report file merely to store an otherwise conversational review.

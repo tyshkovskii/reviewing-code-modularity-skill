@@ -1,61 +1,235 @@
 {
+  "schema_version": 1,
   "skill_name": "reviewing-code-modularity-skill",
-  "notes": "Output-quality evals. Compare the upgraded skill against the previous version of the skill, not against no skill. Each expected_output describes the behavior a passing response must show, with emphasis on the anti-overengineering stance.",
-  "evals": [
+  "cases": [
     {
-      "id": "pass-through-service",
-      "prompt": "Review a backend module where UserService only forwards to UserRepository. Identify whether this is useful structure.",
-      "expected_output": "Flags the service as shallow unless it owns rules, orchestration, mapping, auth, caching, retries, logging, or a real test seam. Recommends removing it or giving it real responsibility, not adding more layers. Names the cost as a shallow module with no added depth."
+      "id": "private-forwarder",
+      "fixture": "account-internal",
+      "mode": "A",
+      "split": "development",
+      "request": "Review the account lookup structure. Is the current service boundary earning its place? Do not edit files.",
+      "files": [
+        "CONTEXT.md",
+        "src/service.mjs",
+        "src/store.mjs",
+        "src/http.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "route-owns-everything",
-      "prompt": "Review a route handler that parses HTTP, validates input, writes SQL, sends email, maps provider errors, and returns JSON.",
-      "expected_output": "Identifies mixed responsibilities and high cognitive load, and proposes the smallest useful restructuring with clear route/service/repository/provider responsibilities. Does not jump to Clean Architecture, ports/adapters, or DI. Keeps HTTP at the route boundary."
+      "id": "public-forwarder",
+      "fixture": "account-package",
+      "mode": "A",
+      "split": "holdout",
+      "request": "Review the account package structure. Is the forwarding export useful, or should we remove it? Do not edit files.",
+      "files": [
+        "CONTEXT.md",
+        "src/index.mjs",
+        "src/internal-store.mjs",
+        "consumer.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "avoid-bad-abstraction",
-      "prompt": "Two functions look similar but handle users and invoices. Should we merge them into processEntity?",
-      "expected_output": "Warns against inappropriate sharing if the concepts may diverge, and asks whether they are the same concept that will evolve together. Allows duplication when a shared abstraction would hide unrelated behavior. Does not merge by default."
+      "id": "shared-delivery-policy",
+      "fixture": "delivery-policy",
+      "mode": "A",
+      "split": "development",
+      "request": "Review checkout and renewal for useful structural improvements. The repeated delivery calculation caught my eye. Do not edit files.",
+      "files": [
+        "CONTEXT.md",
+        "CHANGELOG.md",
+        "src/checkout.mjs",
+        "src/renewal.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "candidate-report",
-      "prompt": "Scan this area for modularity refactor candidates and give a top recommendation.",
-      "expected_output": "Produces candidate cards with files, current friction, why complexity increases (using shared vocabulary), smallest useful fix, before/after sketch, testing impact, what not to change, and recommendation strength. Leads with a single top recommendation. Does not pad with speculative candidates."
+      "id": "similar-labels",
+      "fixture": "display-labels",
+      "mode": "A",
+      "split": "holdout",
+      "request": "These two label functions look identical. Should we move the code into one processLabel utility? Review first; no edits.",
+      "files": [
+        "CONTEXT.md",
+        "src/account.mjs",
+        "src/invoice.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "chosen-candidate-interface-design",
-      "prompt": "Explore candidate 1 and design the public surface.",
-      "expected_output": "Runs the deepening loop (what it owns, hides, public surface, surviving tests, what not to refactor) and compares 2-4 materially different designs including a minimal surface and a caller-optimized design. Ends with one strong recommendation and a reason. Does not add a seam/interface unless real pressure exists."
+      "id": "cohesive-parser",
+      "fixture": "record-parser",
+      "mode": "A",
+      "split": "development",
+      "request": "This parser feels long. Would splitting it into separate modules make it easier to change? Review its boundaries; do not edit it.",
+      "files": [
+        "CONTEXT.md",
+        "src/parse-record.mjs",
+        "contract.test.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "respect-existing-decision",
-      "prompt": "Recommend restructuring a module whose layout is explicitly documented in docs/adr/0007-feature-slices.md.",
-      "expected_output": "Reads the ADR before recommending, and only surfaces a conflict when the friction is real. Marks the recommendation as conflicting with the decision, explains what changed since it was made, and leaves the choice to the user. Does not edit the ADR or other docs unprompted."
+      "id": "signup-review",
+      "fixture": "signup-route",
+      "mode": "A",
+      "split": "development",
+      "request": "Review src/signup-route.mjs for modularity problems. Give the important findings; do not change code.",
+      "files": [
+        "CONTEXT.md",
+        "src/signup-route.mjs",
+        "src/store.mjs",
+        "src/mail.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "long-file-not-enough",
-      "prompt": "This file is 1200 lines. Split it.",
-      "expected_output": "Does not split by line count alone. First identifies responsibilities, reasons for change, the public surface, callers, and test boundaries. Splits only along a real responsibility seam, and if none is justified, recommends no structural split and explains why length alone is not a reason."
+      "id": "signup-scan",
+      "fixture": "signup-route",
+      "mode": "B",
+      "split": "development",
+      "request": "Scan this signup area for refactoring opportunities and recommend where we should start. Do not implement yet.",
+      "files": [
+        "CONTEXT.md",
+        "src/signup-route.mjs",
+        "src/store.mjs",
+        "src/mail.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "simple-bug-fix-should-not-architecture",
-      "prompt": "Fix this null pointer bug in the route handler.",
-      "expected_output": "Keeps the fix local and does not trigger an architecture review. Only raises structure if the bug clearly exposes structural complexity (e.g. the same missing check is duplicated across many handlers), and even then offers it as a separate optional note rather than blocking the fix."
+      "id": "signup-selected-design",
+      "fixture": "signup-route",
+      "mode": "C",
+      "split": "development",
+      "request": "Explore the selected candidate and design its public surface. Show realistic caller code and recommend an approach; leave implementation for the next turn.",
+      "files": [
+        "CONTEXT.md",
+        "selected-candidate.md",
+        "src/signup-route.mjs",
+        "src/store.mjs",
+        "src/mail.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "accidental-enterprise-layering",
-      "prompt": "Should I add service/repository/use-case layers to make this cleaner?",
-      "expected_output": "Rejects layering by default and asks what complexity exists today. Only recommends a layer if it would own real responsibility (rules, orchestration, mapping, auth, caching, a test seam). Warns that empty pass-through layers are shallow modules that add surface without depth."
+      "id": "clock-seam",
+      "fixture": "expiry-clock",
+      "mode": "C",
+      "split": "development",
+      "request": "Design a way to test expiry without changing the global clock. We have only one production clock implementation. Keep existing callers working; no code edits yet.",
+      "files": [
+        "CONTEXT.md",
+        "src/expiry.mjs",
+        "src/consumer.mjs",
+        "contract.test.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "wrong-shared-helper",
-      "prompt": "These two blocks look similar; move them into utils?",
-      "expected_output": "Checks whether the two blocks are actually the same concept that will evolve together before merging. Rejects a junk-drawer utils module. Prefers a named module only if it hides a real, shared design decision; otherwise keeps the duplication."
+      "id": "pure-function-seam",
+      "fixture": "amount-format",
+      "mode": "C",
+      "split": "holdout",
+      "request": "Should we introduce an AmountFormatter interface plus factory to make this code more testable? Explain the design you recommend. Do not edit files.",
+      "files": [
+        "CONTEXT.md",
+        "src/amount.mjs",
+        "src/export-row.mjs",
+        "contract.test.mjs"
+      ],
+      "contract": "fixture"
     },
     {
-      "id": "html-report-opt-in",
-      "prompt": "Review this PR for modularity issues.",
-      "expected_output": "Returns concise Mode A findings ordered by risk. Does not create an HTML report and does not produce candidate cards. HTML and candidate cards are reserved for broad scans or an explicit visual-report / candidates request."
+      "id": "public-import",
+      "fixture": "catalog-boundary",
+      "mode": "A",
+      "split": "development",
+      "request": "Review only src/report.mjs and its catalog dependency for modularity. Is this consumer crossing an inappropriate boundary? No edits.",
+      "files": [
+        "CONTEXT.md",
+        "docs/adr/0007-feature-slices.md",
+        "src/report.mjs",
+        "src/catalog/index.mjs",
+        "src/catalog/internal/rows.mjs"
+      ],
+      "contract": "fixture"
+    },
+    {
+      "id": "internal-import",
+      "fixture": "catalog-boundary",
+      "mode": "A",
+      "split": "development",
+      "request": "Review only src/export.mjs and its catalog dependency for modularity. Is this consumer crossing an inappropriate boundary? No edits.",
+      "files": [
+        "CONTEXT.md",
+        "docs/adr/0007-feature-slices.md",
+        "src/export.mjs",
+        "src/catalog/index.mjs",
+        "src/catalog/internal/rows.mjs"
+      ],
+      "contract": "fixture"
+    },
+    {
+      "id": "respect-adr",
+      "fixture": "catalog-boundary",
+      "mode": "C",
+      "split": "development",
+      "request": "I am considering moving catalog code into application-wide controllers, services, and repositories. Review our context and recommend the module design that makes the export/report work easiest to maintain. Design only.",
+      "files": [
+        "CONTEXT.md",
+        "docs/adr/0007-feature-slices.md",
+        "src/catalog/index.mjs",
+        "src/export.mjs",
+        "src/report.mjs"
+      ],
+      "contract": "fixture"
+    },
+    {
+      "id": "pr-introduced-vs-existing",
+      "fixture": "catalog-change",
+      "mode": "A",
+      "split": "holdout",
+      "request": "Review PR 42 for modularity problems introduced by this change. Use the supplied patch and snapshots. Keep the review concise and read-only.",
+      "files": [
+        "CONTEXT.md",
+        "pr.json",
+        "change.patch",
+        "base/admin.mjs",
+        "base/catalog/index.mjs",
+        "head/export.mjs",
+        "head/admin.mjs",
+        "head/catalog/index.mjs"
+      ],
+      "contract": "fixture"
+    },
+    {
+      "id": "implement-shared-order-operation",
+      "fixture": "order-flow",
+      "mode": "D",
+      "split": "development",
+      "request": "Refactor the duplicated order workflow into one shared operation. Preserve submitHttp and submitCli behavior, errors, and side-effect order. Implement the smallest useful change and run the relevant tests.",
+      "files": [
+        "CONTEXT.md",
+        "src/http.mjs",
+        "src/cli.mjs",
+        "contract.test.mjs"
+      ],
+      "contract": "fixture"
+    },
+    {
+      "id": "local-null-fix",
+      "fixture": "empty-profile",
+      "mode": "none",
+      "split": "holdout",
+      "request": "Fix the null-profile crash described in CONTEXT.md. Keep the change local and check the guest response and normal profile response.",
+      "files": [
+        "CONTEXT.md",
+        "src/profile.mjs",
+        "contract.test.mjs"
+      ],
+      "contract": "null-fix"
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "number": 42,
+  "title": "Add catalog export",
+  "baseline_kind": "snapshot",
+  "base": "base",
+  "head": "head",
+  "patch": "change.patch",
+  "changed_files": [
+    "export.mjs"
+  ]
+}

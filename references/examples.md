@@ -2,7 +2,7 @@
 
 These examples show how to apply modularity principles. They are not mandatory patterns. Choose the smallest structure that reduces complexity in the current codebase.
 
-Examples use TypeScript (with Hono/React) for concreteness. The principles are language-agnostic: translate the vocabulary (`routes -> services -> repositories`, `index.ts`, framework `Context`) to the project's actual stack and conventions.
+Examples use TypeScript (with Hono/React) for concreteness. Translate them to the project's actual stack and conventions; the filenames and layers are not requirements. Snippets omit unchanged dependencies. Preserve their existing contracts when moving them; adding validation, permissions, error mapping, or side effects is a separate behavior change.
 
 ## Contents
 
@@ -10,6 +10,7 @@ Examples use TypeScript (with Hono/React) for concreteness. The principles are l
 - Examples 6-10: public sequencing, premature interfaces, React components, shared abstractions, and error mapping
 - Examples 11-15: file splitting, small and larger project structure, explicit initialization, and public feature APIs
 - Examples 16-18: duplication versus abstraction, long files, and design-review output
+- Examples 19-20: a tiny route worth keeping and a justified single-implementation seam
 
 ## Example 1: Route owns everything
 
@@ -67,36 +68,45 @@ This increases cognitive load and makes testing harder.
 
 ```ts
 app.post("/users", async (c) => {
-  const input = createUserSchema.parse(await c.req.json())
-  const user = await usersService.createUser(input)
+  const body = await c.req.json()
+  if (!body.email || !body.email.includes("@")) {
+    return c.json({ error: "Invalid email" }, 400)
+  }
 
-  return c.json({ user }, 201)
+  const result = await createUser(body)
+  if (result.kind === "conflict") {
+    return c.json({ error: "User already exists" }, 409)
+  }
+  return c.json({ user: result.user }, 201)
 })
 ```
 
 ```ts
 export async function createUser(input: CreateUserInput) {
-  const email = normalizeEmail(input.email)
+  const email = input.email.trim().toLowerCase()
 
-  const existing = await usersRepository.findByEmail(email)
-  if (existing) {
-    throw new ConflictError("User already exists")
+  const existing = await db.query(
+    "select id from users where email = ?",
+    [email]
+  )
+  if (existing.length > 0) {
+    return { kind: "conflict" as const }
   }
 
-  const user = await usersRepository.create({
-    email,
-    name: input.name,
-  })
+  const user = await db.query(
+    "insert into users (email, name) values (?, ?) returning *",
+    [email, input.name]
+  )
 
-  await welcomeEmailSender.send(user)
+  await emailClient.send({ to: email, template: "welcome" })
 
-  return toUserDto(user)
+  return { kind: "created" as const, user }
 }
 ```
 
 ### Why better
 
-The route handles transport. The service owns the operation. The repository hides storage. The email sender hides provider details. The caller gets a simple operation.
+The route retains HTTP parsing, validation, and the same 400/409/201 responses. One operation module owns the database/email sequence; no repository or provider wrapper is needed just to perform this extraction. The query result shape, normalization, awaited email, and unexpected-error propagation stay unchanged. Check these contracts before and after the move; do not add a schema or DTO conversion as incidental cleanup.
 
 ## Example 2: Pass-through service
 
@@ -116,7 +126,7 @@ export const usersService = {
 
 ### Problem
 
-The service layer adds no behavior. It is shallow.
+The service layer adds no behavior. Inspect its callers and contract before deciding that it adds no value: forwarding can still preserve a deliberate public boundary.
 
 ### Better option A: remove the layer
 
@@ -124,27 +134,15 @@ The service layer adds no behavior. It is shallow.
 const user = await usersRepository.getUser(id)
 ```
 
-This is fine for small apps.
+This is useful when the wrapper is internal, every caller is known, and direct use does not expose a previously hidden implementation contract. Preserve the existing arguments, results, errors, and side effects.
 
-### Better option B: make the service own real behavior
+### Valid counterexample: keep a compatibility facade
 
-```ts
-export async function deleteUser(actorId: string, userId: string) {
-  await permissions.assertCanDeleteUser(actorId, userId)
+Suppose `usersService.deleteUser(id)` is an already-published package API, the repository is private, and supported consumers still use that API. Keep the forwarding method: removing it breaks an existing contract or exposes storage details. Cite the exports and consumers that establish this responsibility.
 
-  const user = await usersRepository.getUser(userId)
-  if (!user) {
-    throw new NotFoundError("User not found")
-  }
+Do not invent authorization, not-found checks, audit events, or new arguments to make a shallow layer look useful. If those operations already live in callers, moving them may be a separate, justified candidate; preserve their existing order and behavior.
 
-  await usersRepository.deleteUser(userId)
-  await auditLog.recordUserDeleted({ actorId, userId })
-}
-```
-
-### Why better
-
-Now the service owns authorization, existence checks, deletion, and audit behavior.
+The criterion is the decision hidden from callers, not how many lines the wrapper executes. A hypothetical future implementation is not enough.
 
 ## Example 3: Deep import into another feature
 
@@ -177,12 +175,12 @@ Use this if email normalization is a general concept.
 import { users } from "../users"
 
 export async function inviteMember(email: string) {
-  const user = await users.findByEmail(email)
+  const normalized = users.normalizeEmail(email)
   // ...
 }
 ```
 
-Use this if the team feature should not know how users normalize email.
+Use this only if user-email normalization is an intentionally supported public operation. Preserve the same normalization behavior; replacing it with a database lookup would be a behavior change. If neither ownership model fits, do not force a shared API.
 
 ## Example 4: Junk drawer utilities
 
@@ -233,6 +231,10 @@ import type { Context } from "hono"
 
 export async function createUserFromRequest(c: Context) {
   const body = await c.req.json()
+  const existing = await usersRepository.findByEmail(body.email)
+  if (existing) {
+    throw new ConflictError("User already exists")
+  }
   const user = await usersRepository.create(body)
 
   return c.json({ user }, 201)
@@ -247,7 +249,7 @@ The service knows Hono. It cannot be easily tested without framework objects. It
 
 ```ts
 app.post("/users", async (c) => {
-  const input = createUserSchema.parse(await c.req.json())
+  const input = await c.req.json()
   const user = await createUser(input)
 
   return c.json({ user }, 201)
@@ -261,15 +263,13 @@ export async function createUser(input: CreateUserInput) {
     throw new ConflictError("User already exists")
   }
 
-  const user = await usersRepository.create(input)
-
-  return toUserDto(user)
+  return usersRepository.create(input)
 }
 ```
 
 ### Why better
 
-Framework details stay at the route boundary. The service receives plain input, owns the user-creation rule, and can be tested directly.
+Framework details stay at the route boundary. The operation retains the existing conflict check, returned value, and failure behavior; the application's existing error handler stays unchanged. Do not introduce new schema validation or DTO mapping during this move.
 
 ## Example 6: Public API exposes sequencing
 
@@ -424,7 +424,7 @@ export function toUserProfile(dto: UserDto): UserProfile {
 
 ### Why better
 
-The page coordinates state. Mapping lives separately. Rendering is simpler. Tests can target mapping and UI separately.
+The page coordinates state. Mapping lives separately. Rendering is simpler. The omitted hook must retain the existing fetch, validation, state transitions, and error behavior; the replacement UI must preserve rendered output and interactions. Separately propose any change to cancellation or stale responses. Tests can target mapping and UI separately.
 
 ## Example 9: Bad shared abstraction
 
@@ -474,8 +474,8 @@ app.post("/users", async (c) => {
     const user = await createUser(await c.req.json())
     return c.json({ user })
   } catch (error) {
-    if (error.message === "USER_EXISTS") {
-      return c.json({ error: "User exists" }, 409)
+    if (error instanceof ConflictError) {
+      return c.json({ error: error.message }, 409)
     }
 
     return c.json({ error: "Internal error" }, 500)
@@ -487,8 +487,8 @@ app.post("/teams", async (c) => {
     const team = await createTeam(await c.req.json())
     return c.json({ team })
   } catch (error) {
-    if (error.message === "TEAM_EXISTS") {
-      return c.json({ error: "Team exists" }, 409)
+    if (error instanceof ConflictError) {
+      return c.json({ error: error.message }, 409)
     }
 
     return c.json({ error: "Internal error" }, 500)
@@ -508,14 +508,6 @@ app.onError((error, c) => {
     return c.json({ error: error.message }, 409)
   }
 
-  if (error instanceof NotFoundError) {
-    return c.json({ error: error.message }, 404)
-  }
-
-  if (error instanceof ValidationError) {
-    return c.json({ error: error.message }, 400)
-  }
-
   return c.json({ error: "Internal error" }, 500)
 })
 ```
@@ -524,16 +516,15 @@ Routes can stay focused:
 
 ```ts
 app.post("/users", async (c) => {
-  const input = createUserSchema.parse(await c.req.json())
-  const user = await createUser(input)
+  const user = await createUser(await c.req.json())
 
-  return c.json({ user }, 201)
+  return c.json({ user })
 })
 ```
 
 ### Why better
 
-The boundary owns HTTP error translation. Services can throw meaningful domain/application errors.
+The boundary owns the existing HTTP error translation: the same conflict message and 409, otherwise the same generic 500. Apply this only where the affected routes already share that policy. Check other routes before installing a global handler; use a scoped handler when their policies differ. Adding new 400/404 mappings or changing error types requires a separate behavior change.
 
 ## Example 11: Over-splitting by file length
 
@@ -568,7 +559,7 @@ Files should represent meaningful responsibilities, not arbitrary function count
 
 ## Example 12: Small project structure
 
-### Good starting point
+### One option when these responsibilities already exist
 
 ```txt
 src/
@@ -590,7 +581,7 @@ src/
 
 ### Why good
 
-Simple, understandable, and enough separation for many small APIs.
+Simple, understandable, and enough separation for many small APIs. Do not create every directory up front; a smaller app may need only a route and a database binding. This is an example, not a target folder tree.
 
 Do not start with heavy architecture unless the project needs it.
 
@@ -774,30 +765,48 @@ Use this when those parts change independently or are useful boundaries.
 
 ## Example 18: Design review output
 
-When reviewing a codebase, produce something like:
+For an observed mixed-responsibility problem, a concise finding could be:
 
 ```txt
-1. Biggest modularity issue
+Medium impact, Supported, Existing: the signup and admin-create handlers each
+own the same normalization and conflict decision. Cite both handlers and their
+callers. Explain which current or planned change must coordinate the two copies.
 
-The users route owns validation, database access, response mapping, and welcome-email behavior.
-
-2. Why it increases complexity
-
-Every change to user creation requires editing transport code. Tests must go through HTTP even when testing business rules. Database details also leak into response mapping.
-
-3. Minimal fix
-
-Move create-user orchestration into `users.service.ts`. Keep HTTP parsing and response status in the route. Keep SQL in `users.repository.ts`.
-
-4. Better long-term structure
-
-If user-related behavior grows, expose a public `users/index.ts` and prevent other features from importing user internals directly.
-
-5. What not to change
-
-Do not introduce interfaces, factories, or dependency injection yet. One implementation exists and the immediate problem is mixed responsibility, not implementation swapping.
-
-6. Validation steps
-
-Run route tests, service tests if added, typecheck, and inspect imports for deep internal references.
+Extract that shared operation while preserving each route's response contract.
+Check that the rules really must evolve together; otherwise keep them separate.
+Retain the existing database/client bindings. Do not add repositories or interfaces
+unless the inspected coupling makes them useful. Re-run both routes' behavior tests.
 ```
+
+Use actual locations and evidence, never these example facts by default. If no concrete cost survives inspection, report no actionable findings rather than writing an architecture plan. Use the Mode B report only for a scan or candidate request.
+
+## Example 19: Tiny direct SQL route worth keeping
+
+```ts
+app.get("/countries", async (c) => {
+  const countries = await db.query("select code, name from countries order by name")
+  return c.json({ countries })
+})
+```
+
+Keep this when it is the only caller, the returned shape is the intended contract, and existing tests cover that behavior without a burdensome setup. A service that only forwards this query adds a hop without hiding a decision. If storage details later cause a demonstrated problem, review that evidence then; do not add a repository solely because SQL appears in a route.
+
+## Example 20: One implementation, justified test seam
+
+Suppose existing renewal tests sleep around a clock boundary and fail intermittently. The app has only one production clock, but exact boundary behavior needs deterministic tests.
+
+```ts
+// Existing operation
+export function canRenew(subscription: Subscription) {
+  return subscription.renewableUntil > Date.now()
+}
+```
+
+```ts
+// Small seam; existing one-argument calls preserve their behavior.
+export function canRenew(subscription: Subscription, now = Date.now()) {
+  return subscription.renewableUntil > now
+}
+```
+
+Now test timestamps just before, at, and after the existing deadline without sleeping or mocking a global. The comparison and default clock stay unchanged. The optional argument adds a small public-surface cost; justify it with the observed test problem and the operation's meaningful time input. No clock interface, factory, or second production implementation is required. Preserve visibility: do not export a private helper solely to test it.

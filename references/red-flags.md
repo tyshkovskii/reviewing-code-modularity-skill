@@ -2,7 +2,7 @@
 
 Use this as a checklist during code review or refactoring.
 
-A red flag does not automatically mean the code is wrong. It means the structure deserves inspection.
+A red flag is a lead, not a finding. Check the affected callers, concrete cost, and strongest counter-explanation using the evidence rules in `SKILL.md`. Intentional boundaries, framework conventions, and cohesive code can resemble these patterns without requiring a change.
 
 Code snippets use TypeScript for concreteness; the red flags are language-agnostic. Map the vocabulary to the project's actual stack.
 
@@ -54,9 +54,9 @@ class UserService {
 }
 ```
 
-This can be useful if it is a future seam, but by default it is suspicious.
+Keep it when inspected evidence shows that it protects an existing compatibility contract or hides an implementation choice callers should not depend on. A possible future seam alone does not justify it.
 
-Prefer removing it or making it own real logic.
+Remove an unnecessary internal wrapper when that simplifies callers without leaking details. Move existing responsibility only when it belongs here; do not invent behavior to give a layer a purpose.
 
 ## 3. Information leakage
 

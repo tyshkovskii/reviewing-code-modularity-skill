@@ -18,6 +18,9 @@ Depending on the task, the skill can produce:
 - interface alternatives for a selected restructuring
 - behavior-preserving implementation guidance
 - validation steps after refactoring
+- an explicit no-change recommendation when the evidence does not justify a refactor
+
+Findings must identify an affected operation or concrete change, trace the relevant callers and shared knowledge, and survive a reasonable counter-explanation. The report separates impact, evidence, and whether the problem was introduced by the change. A pattern name, file length, or speculative future requirement is not enough.
 
 It works in four modes — fast review, architecture friction scan, candidate deepening design, and behavior-preserving implementation — and chains them (scan → choose a candidate → design → implement) when the task calls for it.
 
@@ -39,13 +42,15 @@ This is not a Clean Architecture generator, DDD generator, SOLID checklist, or d
 The skill works in four modes (fast review, architecture friction scan, candidate deepening design, behavior-preserving implementation) and chains them when the task is broad:
 
 1. **"Scan this backend for modularity refactor candidates."**
-   → a candidate report: a top recommendation plus 1–4 candidates, each with current friction, why complexity increases, the smallest useful fix, a before/after sketch, testing impact, what not to change, and a recommendation strength.
+   → a recommendation plus up to four supported candidates, each with code evidence, current friction, the smallest useful fix and its cost, testing impact, and what not to change. Zero candidates is valid.
 2. **"Explore candidate 1."**
    → what the module owns and hides, its public surface, example caller code, the tests that should survive, what not to refactor, and — if the decision is nontrivial — 2–4 materially different designs ending in one strong recommendation.
 3. **"Implement the smallest safe version."**
-   → a behavior-preserving refactor that keeps the public API stable, plus validation (smallest relevant tests, typecheck, lint, import checks) and a summary of changed files and remaining risk.
+   → a refactor grounded in a pre-edit behavior contract and test baseline, followed by relevant validation and a summary of changed files and remaining risk.
 
 A small, well-scoped request stops at step 1's fast-review equivalent — concise findings, no candidate cards.
+
+For a costly design decision, the optional change-impact exercise compares how an actual planned requirement would work under the current and proposed boundaries. It includes migration and indirection costs. It does not manufacture future requirements or treat fewer files as proof of improvement. See [interface-design.md](references/interface-design.md).
 
 ## Project Layout
 
@@ -63,9 +68,16 @@ reviewing-code-modularity-skill/
   evals/
     trigger-queries.json
     evals.json
+    rubric.json
+    fixtures.json
+    fixtures/
+    prepare-run.mjs
+    check-run.mjs
+    verify.mjs
+    README.md
 ```
 
-`SKILL.md` contains the runtime instructions and trigger description. `references/` contains detailed material the agent should load only when needed. `evals/` holds trigger and output-quality evals used during development; it is not part of the installed runtime payload.
+`SKILL.md` contains the runtime instructions and trigger description. `references/` contains detailed material the agent should load only when needed. `evals/` is development-only: actual code fixtures, behavior contracts, task preparation, and separate grading expectations. Do not load it while using the skill to review another project.
 
 ## Install
 
@@ -75,7 +87,7 @@ Install with the [skills.sh](https://skills.sh) CLI:
 npx skills add tyshkovskii/reviewing-code-modularity-skill
 ```
 
-This downloads the runtime payload and records it in `skills-lock.json`.
+Installation behavior depends on the CLI version. Keep evaluation data out of the agent's runtime context; the runtime files are `SKILL.md` and `references/`.
 
 ### Install Manually
 
@@ -110,8 +122,12 @@ reviewing-code-modularity-skill/
 
 After editing the skill:
 
-- Re-check that `SKILL.md` stays concise and points to references instead of duplicating them.
-- Confirm examples do not accidentally teach architecture cosplay, pass-through layers, or speculative abstractions.
+- Run `node evals/verify.mjs` to check the evaluation manifest, fixture paths, and executable behavior contracts (Node.js 22+; no dependencies).
+- Follow [evals/README.md](evals/README.md) for isolated **no-skill / current / candidate** runs, held-out cases, and blind grading. Test activation separately from review quality.
+- Compare useful findings, missed problems, false positives, preservation of behavior, and runtime cost. Do not reward particular filenames or architectural vocabulary.
+- Re-check that examples preserve their stated contracts and that conditional references agree with the main workflow.
+
+Passing the deterministic checks proves the fixtures work. It does **not** establish that the skill improves agent performance. Report model/harness, repetitions, held-out results, and limitations when publishing comparisons.
 
 ## License
 

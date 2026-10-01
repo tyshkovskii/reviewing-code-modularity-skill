@@ -6,10 +6,10 @@ The goal is to compare *materially different* shapes and recommend one. If the a
 
 ## Process
 
-Generate 2 to 4 designs that differ in what the public surface is and what it hides. Skip any design whose precondition the code does not meet.
+For a genuine choice, compare 2 to 4 designs that differ in what the public surface is and what it hides. These are optional shapes, not required slots; skip any whose precondition the code does not meet. One obvious design needs no comparison.
 
 ### Design A: Minimal surface
-- 1-3 public entry points; hide sequencing and implementation detail behind them.
+- Hide sequencing and implementation detail behind the operations callers actually need; do not optimize an arbitrary export count.
 - Prefer a boring, direct implementation.
 - This is usually the right default.
 
@@ -24,7 +24,7 @@ Generate 2 to 4 designs that differ in what the public surface is and what it hi
 ### Design D: Seam / adapters
 Allowed only with real, present pressure you can point to — at least one of:
 - Multiple implementations already exist.
-- Tests are genuinely impossible (not just inconvenient) without a seam.
+- Existing behavior tests are nondeterministic, prohibitively costly, or cannot run reliably without controlling a dependency; identify the affected tests and cost.
 - An external dependency's coupling is actively hurting the code.
 - The public API is leaking implementation details that a seam would contain.
 
@@ -41,7 +41,21 @@ For each design include:
 5. **Tradeoffs** — what this shape costs.
 6. **Why this might be wrong** — the honest failure mode.
 
-End with one **strong recommendation** and a one-line reason. Do not hedge across all designs equally; pick one and say why the others lose for this code.
+End with one **strong recommendation** and a one-line reason, which may be to keep the current design. Name a missing fact when it prevents a defensible choice instead of manufacturing certainty.
+
+## Optional: change-impact exercise
+
+Use for a costly or disputed boundary decision, not every review. Choose one or two actual planned requirements or recent representative changes from the user, issue, or history; cite their source. If none are available, skip this exercise rather than inventing future needs.
+
+Trace how each change would work under the current design and the proposed one:
+
+| Compare | What to inspect |
+| --- | --- |
+| Knowledge and ownership | Which callers must understand the changed decision, and which independent owners must coordinate? |
+| Contract and verification | Which APIs, behavior tests, and failure paths change? What remains hidden? |
+| New cost | Which extra call hops, concepts, adapters, mapping, initialization, or migration does the proposal require? |
+
+Explain the net effect and the assumptions behind it. File count, export count, or shorter methods alone do not measure complexity; moving one decision into five files can still increase indirection. Keep this a reasoning exercise unless implementation or a prototype was requested. Prefer the current design when the improvement does not cover its cost.
 
 ## Guardrail
 

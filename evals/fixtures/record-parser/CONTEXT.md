@@ -1,0 +1,2 @@
+# Quoted record parser
+`parseRecord` is the public operation for a single record in a small import format. Its quote state, separator handling, and escaping follow one grammar. The grammar changes as one versioned unit, and there are no other users of the internal states. This is deliberately a compact executable stand-in for a large cohesive module: line count is not the oracle. Run `node --test contract.test.mjs`.

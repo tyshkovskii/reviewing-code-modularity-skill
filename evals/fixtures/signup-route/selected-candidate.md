@@ -1,0 +1,2 @@
+# Selected candidate from the preceding review
+The user chose candidate 1: make account signup reusable by HTTP and the planned batch importer. Preserve the existing HTTP JSON shape, error mapping, normalization, and save-before-mail order. Existing store/mail modules remain the infrastructure owners. Do not design the importer, replace the data store, or add a framework. This turn is design only.

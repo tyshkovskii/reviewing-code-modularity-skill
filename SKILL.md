@@ -1,6 +1,6 @@
 ---
 name: reviewing-code-modularity-skill
-description: Use when reviewing or changing code structure so a codebase is easier to understand, change, test, or delete — including when the user uses no structural vocabulary, e.g. "this file does too much", "this is hard to test", "I keep editing the same thing in many places", or "this is a mess". Covers module boundaries, file splits, public APIs/exports, dependency direction, coupling/cohesion, shallow layers, over-abstraction, duplicated structural decisions, hard-to-test handlers/components, scattered error mapping, and refactors that move code across modules. Do not use for ordinary bug fixes, formatting, naming-only cleanup, or local edits that do not affect structure.
+description: Review module boundaries, coupling, public APIs, and refactors for concrete complexity and unnecessary abstraction. Use for structural reviews or requests such as "this file does too much", "hard to test", "split this file", or "the same change touches many places". Exclude ordinary bug fixes, formatting, and naming-only edits that do not affect structure.
 ---
 
 # Reviewing Code Modularity
@@ -22,51 +22,61 @@ These hold in every mode. They are the point of this skill — do not dilute the
 5. Do not merge duplicated-looking code if the concepts may evolve separately. Duplication often beats a wrong abstraction.
 6. Do not propose a broad rewrite when a local restructuring solves the problem.
 7. Preserve behavior unless the user explicitly asks for a behavior change.
-8. Do not create or edit ADRs or other docs unless the user asks.
+8. Do not create architecture/report artifacts or rewrite ADRs unless requested. Keep existing API or usage documentation accurate when an authorized code change affects it.
 
 ## Core vocabulary
 
 When terminology matters or you produce a report, use a consistent lens: module, public surface, implementation, responsibility, depth, shallow module, seam, leakage, locality, change amplification, architecture cosplay, recommendation strength. Definitions in `references/language.md`. Prefer the repo's own word for a concept when it has one.
 
-## Before any mode
+## Establish scope
 
-1. Inspect first: folder layout, naming, import direction, nearby similar features, test style, public exports, and existing error/validation conventions. Do not invent a new architecture until you understand the current one.
-2. For each module in scope, ask: What does it own? What should it hide? What is its public surface? Who imports it? What does it import? Can it be tested without booting the whole app?
-3. Read project context when a recommendation is broad or moves code across modules — see `references/decision-records.md`.
+1. Follow applicable project instructions. Inspect the code, nearby conventions, public exports, and relevant tests. Read architecture decisions when a recommendation is broad or moves a boundary — see `references/decision-records.md`.
+2. For a PR/diff, establish the supplied comparison or base/head and read the actual diff. Verify that the range represents the requested change; an empty or unavailable diff is a coverage limitation, not a clean review. Distinguish introduced/worsened problems from existing debt. For an area scan, identify the area inspected and material gaps.
+3. Trace the relevant callers and dependencies around a suspected boundary. Ask what the module owns and hides, which decisions callers must know, and what its tests require. Expand inspection to resolve a named uncertainty, not to map the entire repository by default.
+4. Keep review and design work read-only unless the user requests edits. Produce report files only when requested; HTML requires an explicit HTML or visual-report request. Broad scope alone is not permission to create an artifact.
 
-Judge complexity by whether future changes get harder: change amplification, cognitive load, unknown unknowns, obscurity. The full catalog is in `references/red-flags.md` and `references/principles.md` — load the relevant section, do not recite it.
+## Admit findings on evidence
+
+Treat a smell as a lead, not a verdict. Before reporting a finding:
+
+- Identify the affected operation, current maintenance problem, or concrete planned change. Trace the dependency or duplicated knowledge causing the cost; cite inspected code and relevant callers.
+- Check the strongest reasonable counter-explanation: a compatibility contract, intentional duplication, framework convention, or documented decision. A wrapper may protect a real boundary without adding business logic.
+- Compare the smallest useful intervention with leaving the code alone. Include new indirection, migration, and testing costs; fewer files or exports alone do not establish improvement.
+- Separate **impact** (consequence), **evidence** (Demonstrated | Supported | Unresolved), and **scope** (Introduced/worsened | Existing). Missing evidence means unresolved, not disproven. Keep unresolved leads out of actionable findings; mention a material coverage gap when useful.
+
+Do not report cosmetic preferences or hypothetical growth as defects. Zero actionable findings is a successful result. These are reasoning checks, not a required report template. Load relevant sections of `references/red-flags.md` or `references/principles.md` only when they help resolve the decision.
 
 ## Mode selection
 
 | Mode | Use when | Output |
 | --- | --- | --- |
 | **A — Fast review** | Review a file, diff, PR, module, route, component, or small area. | Findings ordered by risk. No candidate cards. |
-| **B — Friction scan** | Scan a codebase or area for refactoring candidates, improve structure, find boundaries, or ask for a top recommendation. | Candidate cards + top recommendation. |
+| **B — Friction scan** | Scan a codebase or area for refactoring candidates, improve structure, find boundaries, or ask for a top recommendation. | Up to four supported candidates, or no change recommended. |
 | **C — Candidate deepening** | A candidate is chosen, or the user asks to design a public surface/interface. | Owns/hides/surface + design comparison. |
 | **D — Implementation** | The user asks the agent to actually refactor. | Smallest behavior-preserving change + validation. |
 
-Default to the smallest mode that fits. Modes chain when the task is broad: B → C → D.
+Default to the smallest mode that fits. Chain B → C → D when the user requests that work; breadth alone does not authorize implementation. A direct refactor request may enter D without a report or design ceremony.
 
 ### Mode A: Fast modularity review
 
-Inspect the code and report findings ordered by risk. For each finding:
+Apply the evidence checks and report actionable findings ordered by impact. For each finding:
 
-- **Severity** — high (causes change amplification or hidden bugs now: leaked decisions, reversed dependencies, side-effectful imports), medium (will bite as the feature grows: shallow layers, mixed responsibilities, weak boundaries), or low (safe to defer: naming, small duplication, cosmetic splits).
-- **File/line** if available.
-- **Why it increases complexity** — name the mechanism.
+- **Impact** — high for substantial demonstrated change amplification or a supported correctness risk; medium for a concrete recurring maintenance or testing burden; low for a real but local, low-cost issue. Explain the consequence; pattern names do not set severity.
+- **Evidence and location** — cite file/line or an exact symbol in inspected code, and distinguish demonstrated behavior from an inference. State whether the PR introduced/worsened the issue; keep existing debt separate.
+- **Why it increases complexity** — name the affected operation and mechanism.
 - **Smallest useful fix** — behavior-preserving.
 - **What not to change** — only when there is a real over-refactor risk to head off.
 
-Do not use candidate cards and do not write an HTML report in this mode unless the user asks. Concise findings are the product.
+If none qualify, say so with a brief coverage note. Do not use candidate cards unless asked. Concise findings are the product.
 
 ### Mode B: Architecture friction scan
 
 Explore the area for friction, then produce a candidate report using `references/review-report.md`:
 
-- A single **top recommendation** first.
-- **1–4 candidates**, each with: current friction (grounded in real code), why complexity increases, smallest useful fix, before/after sketch, testing impact, what not to change, and recommendation strength (Strong | Worth exploring | Speculative).
+- A single **top recommendation** first, which may be to leave the structure alone.
+- **0–4 candidates** that meet the evidence checks, each with: current friction and locations, impact/evidence/scope, smallest useful fix and its cost, a useful before/after sketch, testing impact, what not to change, and recommendation strength. Do not fill a quota or promote unresolved leads into candidates.
 
-Markdown is the default. An HTML report is opt-in — only for broad scans or an explicit visual-report request. After presenting candidates, ask which one to explore, unless the user already requested implementation.
+Return Markdown in the conversation by default. If further design or implementation was requested, continue within that scope; otherwise finish the review. Ask for a choice only when materially different options need the user's judgment.
 
 ### Mode C: Candidate deepening design
 
@@ -79,16 +89,22 @@ Use after the user selects a candidate or asks to design a public surface. Produ
 5. The **tests that should survive** unchanged (the behavior contract).
 6. What **not** to refactor.
 7. **2–4 materially different designs**, only when the decision is nontrivial.
-8. **One strong recommendation**, with a one-line reason.
+8. **One recommendation**, with a reason and any material uncertainty. Keeping the current boundary may win.
 
-Load `references/interface-design.md` for the design comparison. Comparing designs is not a license to add interfaces — the minimal surface often wins.
+Load `references/interface-design.md` for a nontrivial comparison. One obvious design is enough. For costly boundary decisions, its optional change-impact exercise compares an actual planned requirement under the current and proposed structures. Do not invent speculative requirements to justify a refactor.
 
 ### Mode D: Behavior-preserving implementation
 
-Use when asked to actually refactor:
+Use when asked to actually refactor. Before editing:
+
+- Identify the affected behavior contract from callers and tests: outputs, errors, public signatures, and relevant side effects, ordering, transactions, or initialization.
+- Establish a baseline with the focused existing checks. Record pre-existing failures. If important behavior affected by the move is uncovered, add a small characterization check with expectations derived from the existing contract; do not freeze an acknowledged bug as intended behavior.
+- If checks cannot run, state the limitation and use available evidence without claiming verified equivalence.
+
+Then:
 
 - Make the **smallest behavior-preserving change** that realizes the chosen design.
-- Do not silently change public APIs.
+- Preserve public APIs and caller-visible semantics except for contract changes the user explicitly requested; update affected callers, tests, and usage documentation for those changes. Do not invent auth, auditing, retries, validation, or error behavior to give a new layer a purpose. Separate any requested behavior change from the structural move.
 - Update imports carefully; do not move code without checking callers.
 - Keep unrelated cleanup out of the change.
 - Carry the candidate's "what not to change" guardrail through.
@@ -100,16 +116,14 @@ Close with: what changed, why the structure is better, what checks were run, and
 
 After edits:
 
-1. Run the smallest relevant tests.
-2. Run typecheck if available.
-3. Run lint if available.
-4. Run import or dependency-boundary checks if available.
-5. Inspect the final diff; confirm no unrelated refactor crept in.
-6. If validation cannot run, state that clearly.
+1. Re-run the baseline checks and affected behavior tests, including caller tests where the boundary changed.
+2. Use the project's relevant typecheck, lint, and import/dependency-boundary checks. Broaden validation for a concrete remaining risk or a required project gate, not merely because another command exists.
+3. Inspect the final diff; confirm no unrelated refactor crept in.
+4. If validation cannot run, state that clearly.
 
 ## Reference loading
 
-Use progressive disclosure. Reach for `rg` (or the Grep tool / `grep`); if the right section is not obvious, list headings first with `rg '^## ' references/*.md`, then read only the matching range. Do not recite references — apply them to the code at hand.
+Use progressive disclosure. Resolve these paths relative to this skill's directory, not the project being reviewed. If the right section is unclear, list reference headings with `rg '^## ' <skill-directory>/references/*.md` (or an equivalent file reader), then read the relevant section. Apply references; do not recite them. Evaluation fixtures and rubrics are development material, not runtime references.
 
 - `references/principles.md` — design tradeoffs: deep modules, information hiding, dependency direction, abstraction discipline, file splitting.
 - `references/red-flags.md` — suspected problems; read only the relevant numbered red flags.

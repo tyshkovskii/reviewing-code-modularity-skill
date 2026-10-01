@@ -137,23 +137,25 @@ Bad dependencies are:
 - Reversed across architecture boundaries
 - Based on side effects
 
-### Default direction
+### Dependency direction in context
 
 Dependency direction should make important policy depend on details as little as possible.
 
-Default backend direction:
+One useful backend shape when those responsibilities exist:
 
 ```txt
 routes/controllers -> services/use-cases -> repositories/db/external clients
 ```
 
-Default frontend direction:
+This is a dependency example, not a required stack of layers. A tiny route may use a query directly; one cohesive operation module may own SQL and orchestration without repository or provider wrappers. Judge what callers must know and whether changing a detail spreads across independent owners. Follow an intentional existing boundary when it solves that problem.
+
+One common frontend shape:
 
 ```txt
 pages/routes -> feature components -> shared UI/helpers
 ```
 
-Default library direction:
+One common library shape:
 
 ```txt
 public API -> internal modules -> low-level helpers
@@ -204,7 +206,7 @@ If this only forwards to:
 await billingRepository.chargeCustomer(customerId, invoiceId)
 ```
 
-then the service layer is probably shallow.
+then investigate what contract it protects. Removing an internal pass-through can help; removing a published compatibility facade or exposing a private repository can make callers worse off. Forwarding alone does not establish a defect.
 
 ## Information hiding
 
@@ -435,7 +437,7 @@ Bad refactoring moments:
 
 ## Design it twice
 
-For nontrivial structure changes, compare at least two designs before choosing.
+For nontrivial structure changes with a genuine choice, compare at least two materially different designs. Use one obvious design when there is no meaningful alternative; do not invent options to satisfy a count.
 
 Example:
 
@@ -451,7 +453,7 @@ Usually choose the smallest option that solves the actual complexity.
 
 For small projects, prefer boring structure.
 
-Good small API structure:
+One workable small API structure when separate routes, operations, and schemas are already useful:
 
 ```txt
 src/
@@ -478,7 +480,7 @@ src/
   factories/
 ```
 
-Use more structure when the project earns it.
+Do not create every directory up front. A single file or a route plus one operation module can be enough. Use more structure when the project earns it.
 
 ## Large project bias
 
