@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { readFile, mkdir, writeFile, lstat } from 'node:fs/promises';
-import { resolve, dirname, relative, isAbsolute, sep } from 'node:path';
+import { readFile, mkdir, writeFile, lstat, realpath } from 'node:fs/promises';
+import { resolve, dirname, basename, relative, isAbsolute, sep } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import {
   evalRoot, repoRoot, readJSON, digest, contained, filesUnder, copyFiles,
@@ -18,6 +18,22 @@ Use --arm no-skill for the unassisted baseline.`;
 
 if (process.argv.includes('--help')) { console.log(usage); process.exit(0); }
 
+async function canonicalOutputPath(path) {
+  const missing = [];
+  let ancestor = path;
+  for (;;) {
+    try { await lstat(ancestor); }
+    catch (error) {
+      if (error.code !== 'ENOENT' || dirname(ancestor) === ancestor) throw error;
+      missing.unshift(basename(ancestor));
+      ancestor = dirname(ancestor);
+      continue;
+    }
+    // Resolve the nearest existing ancestor; a dangling symlink must fail here.
+    return resolve(await realpath(ancestor), ...missing);
+  }
+}
+
 try {
   const args = argumentsFrom(process.argv.slice(2), [
     '--case', '--arm', '--output', '--skill-ref', '--skill-repo', '--skill-dir', '--replicate',
@@ -30,11 +46,11 @@ try {
   if (arm !== 'candidate' && args['--skill-dir']) throw new Error('--skill-dir applies only to candidate');
   const replicate = Number(args['--replicate'] || 1);
   if (!Number.isSafeInteger(replicate) || replicate < 1) throw new Error('--replicate must be a positive integer');
-  const output = resolve(args['--output']);
+  const output = await canonicalOutputPath(resolve(args['--output']));
   const skillSource = arm === 'current' ? resolve(args['--skill-repo'] || repoRoot)
     : arm === 'candidate' ? resolve(args['--skill-dir'] || repoRoot) : null;
   for (const root of new Set([repoRoot, skillSource].filter(Boolean))) {
-    const rel = relative(root, output);
+    const rel = relative(await realpath(root), output);
     const inside = rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel));
     if (inside) throw new Error('--output must be outside the evaluation repository and selected skill source');
   }

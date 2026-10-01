@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import assert from 'node:assert/strict';
-import { readFile, writeFile, lstat, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, lstat, mkdtemp, mkdir, realpath, symlink, rm } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -69,6 +69,56 @@ try {
   const disallowed = spawnSync(process.execPath, [resolve(evalRoot, 'prepare-run.mjs'), '--case', 'signup-review', '--arm', 'candidate', '--output', resolve(evalRoot, 'fixtures/rejected-run')], { encoding: 'utf8' });
   assert.notEqual(disallowed.status, 0, 'Preparation accepted an output inside its source');
   assert.ok(disallowed.stderr.includes('--output must be outside'), 'Expected source-contamination rejection');
+
+  // Use disposable sources so a containment regression cannot write into this checkout.
+  const evaluationSource = resolve(prepRoot, 'evaluation-source');
+  await copyFiles(evalRoot, resolve(evaluationSource, 'evals'), await filesUnder(evalRoot));
+  const evaluationAlias = resolve(prepRoot, 'evaluation-alias');
+  await symlink(evaluationSource, evaluationAlias, 'dir');
+  const prepare = (script, arm, output, extra = []) => spawnSync(process.execPath,
+    [script, '--case', 'signup-review', '--arm', arm, '--output', output, ...extra], { encoding: 'utf8' });
+  const assertOutsideRejection = (result) => {
+    assert.notEqual(result.status, 0, 'Preparation accepted an output inside a source through a symlink');
+    assert.ok(result.stderr.includes('--output must be outside'), `Unexpected rejection: ${result.stderr}`);
+  };
+  assertOutsideRejection(prepare(resolve(evaluationSource, 'evals/prepare-run.mjs'), 'no-skill',
+    resolve(evaluationAlias, 'missing-parent/run')));
+  await assert.rejects(lstat(resolve(evaluationSource, 'missing-parent')), { code: 'ENOENT' });
+
+  const selectedSource = resolve(prepRoot, 'skill');
+  const selectedAlias = resolve(prepRoot, 'skill-alias');
+  await mkdir(selectedSource);
+  await writeFile(resolve(selectedSource, 'SKILL.md'), await readFile(resolve(repoRoot, 'SKILL.md')));
+  await symlink(selectedSource, selectedAlias, 'dir');
+  for (const arm of ['current', 'candidate']) {
+    const sourceOption = arm === 'current' ? '--skill-repo' : '--skill-dir';
+    const extra = arm === 'current' ? ['--skill-ref', 'HEAD'] : [];
+    for (const [source, outputRoot] of [[selectedSource, selectedAlias], [selectedAlias, selectedSource]]) {
+      assertOutsideRejection(prepare(resolve(evalRoot, 'prepare-run.mjs'), arm,
+        resolve(outputRoot, 'missing-parent/run'), [sourceOption, source, ...extra]));
+      await assert.rejects(lstat(resolve(selectedSource, 'missing-parent')), { code: 'ENOENT' });
+    }
+  }
+
+  // An external sibling with a shared prefix remains valid, including through an alias.
+  const externalSource = resolve(prepRoot, 'skill-output');
+  const externalAlias = resolve(prepRoot, 'output-alias');
+  await mkdir(externalSource);
+  await symlink(externalSource, externalAlias, 'dir');
+  const accepted = prepare(resolve(evalRoot, 'prepare-run.mjs'), 'candidate',
+    resolve(externalAlias, 'missing-parent/run'), ['--skill-dir', selectedAlias]);
+  assert.equal(accepted.status, 0, accepted.stderr);
+  const canonicalRun = resolve(await realpath(externalSource), 'missing-parent/run');
+  assert.ok(accepted.stdout.includes(`Prepared workspace: ${resolve(canonicalRun, 'workspace')}`));
+  assert.equal((await readJSON(resolve(canonicalRun, 'run.json'))).status, 'prepared-not-executed');
+
+  const missingTarget = resolve(prepRoot, 'missing-target');
+  const danglingAlias = resolve(prepRoot, 'dangling-alias');
+  await symlink(missingTarget, danglingAlias, 'dir');
+  const dangling = prepare(resolve(evalRoot, 'prepare-run.mjs'), 'no-skill', resolve(danglingAlias, 'run'));
+  assert.notEqual(dangling.status, 0, 'Preparation accepted a dangling output ancestor');
+  await assert.rejects(lstat(missingTarget), { code: 'ENOENT' });
+
   const pinnedCommit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repoRoot, encoding: 'utf8' }).trim();
   const rawPromptHashes = new Set();
   for (const arm of ['no-skill', 'current', 'candidate']) {
