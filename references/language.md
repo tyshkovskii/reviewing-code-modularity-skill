@@ -26,11 +26,11 @@ How much useful behavior a module hides behind how small a public surface. Deep 
 
 ## Shallow module
 
-A module whose public surface is almost as complicated as its implementation. Pass-through layers, wrappers that only rename, and "services" that forward to a repository without owning rules are shallow.
+A module that adds a public surface without hiding a meaningful decision. Pass-through code is a reason to inspect, not proof: an existing compatibility facade can protect callers even when its implementation is one line.
 
 ## Seam
 
-A place where behavior can vary or be tested without editing callers. A seam is justified by real pressure (two real implementations, or coupling that makes a unit untestable), not by anticipation.
+A place where behavior can vary or be tested without editing callers. Justify it by real pressure: multiple implementations, nondeterministic or costly tests, or coupling that makes a supported change harder. A single implementation can need a seam; anticipation alone is insufficient.
 
 ## Leakage
 
@@ -50,8 +50,19 @@ Structure that looks architectural but does not reduce complexity: ports/adapter
 
 ## Recommendation strength
 
-How confident a recommendation is, used in reports:
+How worthwhile the proposed action is, distinct from the quality of its evidence:
 
-- **Strong** — the friction is real now, the fix is behavior-preserving and clearly reduces complexity.
-- **Worth exploring** — plausible improvement, but it depends on direction the code may take or on facts you could not confirm.
-- **Speculative** — only pays off under a future that has not arrived. Name it, do not push it.
+- **Strong** — the friction is established and the behavior-preserving fix clearly outweighs its migration and indirection costs.
+- **Worth exploring** — the friction is established, but the best remedy or its net benefit needs a focused comparison.
+
+Do not promote speculative future growth or unresolved leads into actionable recommendations. Surface a material missing fact as a limitation when useful.
+
+## Evidence
+
+- **Demonstrated** — a reproduction, failing test, actual change history, or directly observed behavior establishes the claim.
+- **Supported** — inspected code and callers establish a concrete mechanism and consequence, but the consequence was not reproduced. State the inference.
+- **Unresolved** — missing context leaves a material premise unverified. Exclude it from actionable findings and candidates.
+
+## Impact and scope
+
+Impact describes the consequence and cost, not how strongly a pattern resembles a red flag. Scope distinguishes **Introduced/worsened** from **Existing** in a PR review. Neither label implies evidence that has not been gathered.

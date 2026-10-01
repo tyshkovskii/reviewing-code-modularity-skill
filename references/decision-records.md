@@ -19,7 +19,7 @@ Use `rg --files` or a quick `ls` rather than assuming paths. Read only what is r
 
 ## Do not mutate docs by default
 
-A review does not create or edit these files. Reading is the default; writing happens only when the user asks, or when the narrow ADR condition below is met *and* the user agrees.
+A review does not create or edit these files. An authorized code change may include the necessary update to existing API or usage documentation when it changes that documented contract; this does not authorize unrelated architecture documents or report artifacts. Create or rewrite an ADR only when requested, including when the user accepts the narrow offer below.
 
 ## When a recommendation conflicts with an existing decision
 

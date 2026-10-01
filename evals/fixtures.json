@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "fixtures": {
+    "account-internal": {
+      "path": "fixtures/account-internal",
+      "test": "contract.test.mjs"
+    },
+    "account-package": {
+      "path": "fixtures/account-package",
+      "test": "contract.test.mjs"
+    },
+    "delivery-policy": {
+      "path": "fixtures/delivery-policy",
+      "test": "contract.test.mjs"
+    },
+    "display-labels": {
+      "path": "fixtures/display-labels",
+      "test": "contract.test.mjs"
+    },
+    "record-parser": {
+      "path": "fixtures/record-parser",
+      "test": "contract.test.mjs"
+    },
+    "signup-route": {
+      "path": "fixtures/signup-route",
+      "test": "contract.test.mjs",
+      "optional_context": [
+        "selected-candidate.md"
+      ]
+    },
+    "expiry-clock": {
+      "path": "fixtures/expiry-clock",
+      "test": "contract.test.mjs"
+    },
+    "amount-format": {
+      "path": "fixtures/amount-format",
+      "test": "contract.test.mjs"
+    },
+    "catalog-boundary": {
+      "path": "fixtures/catalog-boundary",
+      "test": "contract.test.mjs"
+    },
+    "order-flow": {
+      "path": "fixtures/order-flow",
+      "test": "contract.test.mjs"
+    },
+    "empty-profile": {
+      "path": "fixtures/empty-profile",
+      "test": "contract.test.mjs"
+    },
+    "catalog-change": {
+      "path": "fixtures/catalog-change",
+      "test": "contract.test.mjs"
+    }
+  }
+}

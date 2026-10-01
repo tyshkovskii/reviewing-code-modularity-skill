@@ -1,0 +1,2 @@
+# Session expiry
+Production has one clock: Date.now. The existing expiry test changes global Date.now and must run serially, interfering with other tests sharing the same process. Tests must cover the exact expiry boundary without sleeps or global patches. The consumer-facing isExpired(session) call must remain valid. This task asks for a design, not implementation. Run `node --test contract.test.mjs`.

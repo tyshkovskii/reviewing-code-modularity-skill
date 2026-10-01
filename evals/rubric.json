@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "grading_policy": {
+    "quality_dimensions": [
+      "evidence accuracy",
+      "finding precision",
+      "consequence and priority calibration",
+      "smallest useful intervention",
+      "scope and behavior preservation"
+    ],
+    "score_per_dimension": {
+      "0": "Incorrect or harmful",
+      "1": "Partly correct; material missing evidence or scope error",
+      "2": "Correct and appropriately scoped"
+    },
+    "critical_failure": "Any listed failure condition invalidates that case; inspect actual output rather than keywords.",
+    "abstention": "A well-supported no-change result is successful where the case calls for it.",
+    "claim_policy": "Fixture checks establish executable inputs and contracts, not agent quality. Do not report performance lift without recorded comparable runs."
+  },
+  "cases": {
+    "private-forwarder": {
+      "expected_mode": "A",
+      "expectations": [
+        "Trace the only consumer and establish that the forwarder owns no additional policy or compatibility promise.",
+        "Recognize removal/direct store use as an optional modest cleanup, or reasonably leave the tiny indirection alone if its actual cost is negligible; do not inflate it into a blocker.",
+        "Keep existing response behavior and avoid speculative layers."
+      ],
+      "failure_conditions": [
+        "Recommends new repository/service/use-case layers without a present responsibility.",
+        "Claims the wrapper is required merely because separation of layers is a universal best practice, without discussing its actual cost or role."
+      ]
+    },
+    "public-forwarder": {
+      "expected_mode": "A",
+      "expectations": [
+        "Recognize the documented public compatibility and information-hiding role.",
+        "Keep the public getAccount export and contract; do not require callers to import internal-store.",
+        "Allow internal simplification only if supported public behavior and exports remain unchanged."
+      ],
+      "failure_conditions": [
+        "Recommends deleting the supported API because it is only one line.",
+        "Assumes the visible consumer represents all published-package users."
+      ]
+    },
+    "shared-delivery-policy": {
+      "expected_mode": "A",
+      "expectations": [
+        "Establish a shared policy from context and coordinated change history, rather than textual resemblance alone.",
+        "Recommend one named delivery-policy owner while preserving channel entry points.",
+        "Identify threshold and charge boundaries as behavior contracts."
+      ],
+      "failure_conditions": [
+        "Keeps duplication as an absolute rule despite shared policy evidence.",
+        "Merges complete checkout and renewal workflows into a generic entity processor."
+      ]
+    },
+    "similar-labels": {
+      "expected_mode": "A",
+      "expectations": [
+        "Use independent ownership and approved divergent behavior to reject an enforced shared policy.",
+        "Recommend retaining local functions rather than a generic utility with mode flags.",
+        "Explain the distinction between similar current syntax and common reasons to change."
+      ],
+      "failure_conditions": [
+        "Merges both functions solely because their bodies match.",
+        "Implements the future behavior changes that were not requested."
+      ]
+    },
+    "cohesive-parser": {
+      "expected_mode": "A",
+      "expectations": [
+        "Recognize one grammar and shared state with a narrow parseRecord surface.",
+        "Conclude that a structural split is not supported by current evidence, or justify only a specifically evidenced local improvement.",
+        "Do not invent high-severity modularity findings to fill a report."
+      ],
+      "failure_conditions": [
+        "Splits token handling, quoting, escaping, and separators into a generic state-machine framework without concrete pressure.",
+        "Uses line count as sufficient evidence."
+      ]
+    },
+    "signup-review": {
+      "expected_mode": "A",
+      "expectations": [
+        "Identify transport parsing/response mapping versus reusable signup policy/orchestration.",
+        "Ground the change pressure in the planned second caller.",
+        "Recommend a small signup operation with HTTP concerns remaining at the route, preserving save-before-mail semantics."
+      ],
+      "failure_conditions": [
+        "Produces an HTML report or a full candidate-selection ceremony for this narrow review.",
+        "Proposes a broad Clean Architecture rewrite or new persistence framework."
+      ]
+    },
+    "signup-scan": {
+      "expected_mode": "B",
+      "expectations": [
+        "Give one evidence-backed top recommendation and only genuinely distinct candidates.",
+        "Show the current friction, smallest structural change, caller impact, and behavior to preserve.",
+        "Do not pad the scan to reach a candidate quota."
+      ],
+      "failure_conditions": [
+        "Presents speculative DI, repository, provider, and factory layers as separate must-do candidates.",
+        "Edits application code."
+      ]
+    },
+    "signup-selected-design": {
+      "expected_mode": "C",
+      "expectations": [
+        "Use the supplied selected-candidate context; do not ask the user which candidate they mean.",
+        "Specify signup ownership, hidden infrastructure details, public input/result/errors, and HTTP caller example.",
+        "Preserve normalization, existing HTTP responses, and save-before-mail order; compare alternatives only if their tradeoffs are material."
+      ],
+      "failure_conditions": [
+        "Makes the proposed application API take an HTTP request or return transport status codes.",
+        "Creates source files or ADRs in a design-only task.",
+        "Adds interfaces only to meet a design-alternative quota."
+      ]
+    },
+    "clock-seam": {
+      "expected_mode": "C",
+      "expectations": [
+        "Recognize a real test seam despite a single production implementation.",
+        "Recommend a small explicit clock/time parameter with production default, or equally narrow construction seam.",
+        "Retain isExpired(session) compatibility and exact >= boundary."
+      ],
+      "failure_conditions": [
+        "Rejects any dependency seam solely because there is one implementation.",
+        "Introduces a DI container, clock hierarchy, or service locator without need."
+      ]
+    },
+    "pure-function-seam": {
+      "expected_mode": "C",
+      "expectations": [
+        "Establish that pure direct calls already supply a sufficient test surface.",
+        "Recommend keeping the small function and direct consumer without speculative interfaces/factories.",
+        "Explain the absent change/test pressure."
+      ],
+      "failure_conditions": [
+        "Adds abstraction for hypothetical future implementations.",
+        "Claims every single implementation can never justify a seam as a universal rule."
+      ]
+    },
+    "public-import": {
+      "expected_mode": "A",
+      "expectations": [
+        "Recognize the public catalog entry point as the intended cross-feature dependency.",
+        "Find no boundary violation in reportTitles under the documented decision.",
+        "Do not turn an unrelated export.mjs issue into a finding against the scoped report consumer."
+      ],
+      "failure_conditions": [
+        "Flags any cross-feature import as wrong.",
+        "Recommends deep imports or bypassing the public surface."
+      ]
+    },
+    "internal-import": {
+      "expected_mode": "A",
+      "expectations": [
+        "Identify the internal row import and knowledge of deleted_at/label_text as leaked representation and filtering policy.",
+        "Recommend the existing listProducts public operation rather than a new layer.",
+        "Cite the actual importing and owning code plus ADR context."
+      ],
+      "failure_conditions": [
+        "Treats the import as acceptable solely because outputs currently match.",
+        "Invents a requirement for a global repository layer."
+      ]
+    },
+    "respect-adr": {
+      "expected_mode": "C",
+      "expectations": [
+        "Read and explain the accepted feature-slice decision before recommending layout changes.",
+        "Prefer using the existing catalog surface for export, unless a concrete changed constraint justifies an ADR conflict.",
+        "Do not edit ADRs or treat an ADR as infallible; distinguish policy constraints from current code evidence."
+      ],
+      "failure_conditions": [
+        "Recommends horizontal layering without reconciling ADR 0007.",
+        "Silently rewrites the ADR.",
+        "Treats the user asking about a design as authorization to implement it."
+      ]
+    },
+    "pr-introduced-vs-existing": {
+      "expected_mode": "A",
+      "expectations": [
+        "Establish the before/after scope from pr.json and patch.",
+        "Identify the new export consumer leaking row representation/filtering; recommend listProducts.",
+        "Do not attribute the unchanged admin leakage to this PR; separate any optional pre-existing note from introduced findings."
+      ],
+      "failure_conditions": [
+        "Claims base/head are real git SHAs rather than explicitly labeled snapshots.",
+        "Reports admin.mjs as an issue introduced by the PR.",
+        "Mutates checkout or produces an unsolicited report artifact."
+      ]
+    },
+    "implement-shared-order-operation": {
+      "expected_mode": "D",
+      "expectations": [
+        "Both entry points delegate shared validation/calculation/save/send responsibility to one coherent owner.",
+        "Transport-specific HTTP and CLI formatting remain at entry points.",
+        "Original evaluator-owned contract passes against the edited code: outputs, exact errors, no effects on invalid input, save-before-send, identical thrown error objects, no mutation.",
+        "Report the actual checks run and residual limitations without claiming unrun tests."
+      ],
+      "failure_conditions": [
+        "Changes public entry-point names or return types.",
+        "Parallelizes, swallows, retries, compensates, or reorders effects.",
+        "Adds unrelated infrastructure or edits tests to hide a behavior regression."
+      ]
+    },
+    "local-null-fix": {
+      "expected_mode": "none",
+      "expectations": [
+        "Return the requested guest response for null profile while preserving the existing named profile response.",
+        "Keep changes local; a structural review or candidate-selection step is not needed.",
+        "Update the characterization test for the intended fix; evaluator-owned desired-behavior oracle passes."
+      ],
+      "failure_conditions": [
+        "Turns a local null check into services, interfaces, dependency injection, or a project-wide architecture review.",
+        "Changes unrelated API behavior."
+      ]
+    }
+  }
+}
